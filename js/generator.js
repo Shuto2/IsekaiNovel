@@ -124,7 +124,8 @@ function openProjectSelectionForCopy(dataType, data) {
             } else if (dataType === 'protagonist') {
                 subtext = project.protagonist?.desc ? `(現在の主人公: ${project.protagonist.desc.substring(0, 20)}...)` : '(主人公未設定)';
             } else if (dataType === 'character') {
-                subtext = `(現在の登場人物数: ${project.characters.split('\n').filter(Boolean).length})`;
+                const charCount = Array.isArray(project.characters) ? project.characters.length : 0;
+                subtext = `(現在の登場人物数: ${charCount})`;
             }
             item.innerHTML = `${project.title} <br><span style="font-size:0.8em; color: #888;">${subtext}</span>`;
             item.dataset.projectId = project.id;
@@ -164,15 +165,21 @@ projectSelectionList.addEventListener('click', (e) => {
     } else if (copyDataType === 'protagonist') {
         confirmMessage = `プロジェクト「${project.title}」の主人公設定を上書きしますか？`;
     } else if (copyDataType === 'character') {
-        confirmMessage = `プロジェクト「${project.title}」にこのキャラクターを追加しますか？`;
+        // copyData は { name, desc } オブジェクト
+        confirmMessage = `プロジェクト「${project.title}」にキャラクター「${copyData.name}」を追加しますか？`;
     }
 
     if (confirm(confirmMessage)) {
         if (copyDataType === 'world') project.world = copyData;
         if (copyDataType === 'protagonist') project.protagonist = copyData;
         if (copyDataType === 'character') {
-            const currentChars = project.characters ? project.characters.split('\n') : [];
-            project.characters = [...currentChars, copyData].filter(Boolean).join('\n');
+            if (!project.characters) project.characters = [];
+            project.characters.push({
+                id: Date.now().toString() + Math.random(),
+                name: copyData.name,
+                description: copyData.desc,
+                faction: ''
+            });
         }
         saveDB();
         alert(`「${project.title}」の設定を更新しました。`);
@@ -419,6 +426,21 @@ function getCharacterDataFromOutput() {
     return null;
 }
 
+function getCharacterDataFromOutput() {
+    const outputText = characterResultOutput.value;
+    const nameMatch = outputText.match(/【名前】\n(.*?)\n\n【設定】/);
+    const descMatch = outputText.match(/【設定】\n([\s\S]*)/);
+
+    if (nameMatch && descMatch) {
+        const name = nameMatch[1].trim();
+        const desc = descMatch[1].trim();
+        return {
+            name: name,
+            desc: desc
+        };
+    }
+    return null;
+}
 copyCharacterToProjectBtn.addEventListener('click', () => {
     const characterData = getCharacterDataFromOutput();
     if (!characterData) {
@@ -446,7 +468,7 @@ if (createProjectFromWorldBtn) {
                 title: title,
                 world: worldSetting,
                 episodes: [],
-                characters: '',
+                characters: [], // 配列として初期化
                 protagonist: { desc: '', pronoun: '' }, // 新しいデータ構造に合わせる
                 ai_settings: { perspective: 'third' }, // デフォルトのAI設定
                 lastUpdated: new Date().toISOString(),

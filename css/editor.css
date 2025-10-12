@@ -1,0 +1,488 @@
+/* --- Episode Editor --- */
+.char-count-display {
+  font-size: 0.7em; /* フォントをさらに小さく */
+  font-weight: bold;
+  color: var(--secondary-text-color);
+  background-color: var(--bg-color);
+  padding: 2px 6px; /* パディングを調整 */
+  border-radius: 8px; /* 角丸を調整 */
+  white-space: nowrap;
+  /* margin-right は親要素で管理するため削除 */
+}
+
+.chat-message {
+  padding: 10px 15px;
+  border-radius: 18px;
+  margin-bottom: 10px;
+  max-width: 85%;
+  word-wrap: break-word;
+  position: relative; /* For bubble actions positioning */
+}
+
+.chat-message.player {
+  background-color: var(--player-bubble-bg);
+  color: var(--player-bubble-text);
+  margin-left: auto;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-message.ai {
+  background-color: var(--ai-bubble-bg);
+  color: var(--ai-bubble-text);
+  margin-right: auto;
+  position: relative; /* For regenerate button positioning */
+  border-bottom-left-radius: 4px;
+}
+
+.turn-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.player-turn {
+  align-items: flex-end; /* 右寄せにする */
+}
+
+.ai-turn {
+  align-items: flex-start; /* 左寄せにする */
+}
+
+.dropdown-wrapper {
+  position: relative;
+  display: inline-block; /* select要素をラップするため */
+  margin-bottom: 2px;
+}
+
+.dropdown-wrapper::after {
+  content: '▼';
+  font-size: 0.7em;
+  color: var(--secondary-text-color);
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none; /* 矢印をクリックしてもドロップダウンが開くように */
+}
+
+.input-type-dropdown {
+  /* Reset */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  /* Custom Style */
+  font-size: 0.8em;
+  color: var(--secondary-text-color);
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px 28px 4px 10px; /* 右側に矢印分のスペースを確保 */
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.input-type-dropdown:hover {
+  background-color: var(--card-bg-color);
+}
+
+.ai-type-label {
+  font-size: 0.8em;
+  color: var(--secondary-text-color);
+  margin-bottom: 2px;
+  padding-left: 8px; /* バブルの角丸に合わせて少し内側に */
+}
+
+.insertion-point {
+  position: relative;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-bubble-btn {
+  background: none;
+  border: none;
+  color: var(--add-bubble-btn-color, var(--border-color));
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.insertion-point:hover .add-bubble-btn {
+  opacity: 1;
+}
+
+.add-bubble-btn:hover {
+  color: var(--fab-bg-color);
+}
+
+.insertion-menu {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  background-color: var(--page-bg-color);
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+.insertion-menu button {
+  background: none;
+  border: none;
+  color: var(--icon-color);
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+}
+
+.chat-message p {
+  margin: 0.5em 0;
+}
+
+.bubble-actions {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 20px;
+  padding: 4px 8px;
+  display: flex;
+  gap: 15px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.bubble-actions button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+}
+
+.chat-message:hover .bubble-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.speaker-tag {
+  font-size: 0.8em;
+  color: var(--secondary-text-color);
+  margin-bottom: 4px;
+  padding-left: 2px;
+}
+.chat-message.player .speaker-tag {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.chat-message.editing {
+  border: 2px solid var(--fab-bg-color);
+  padding: 8px 13px; /* borderの分だけpaddingを調整 */
+}
+
+.chat-message .bubble-content[contenteditable="true"] {
+  outline: none;
+  cursor: text;
+}
+
+.inline-edit-actions {
+  text-align: right;
+  margin-top: 8px;
+  border-top: 1px solid rgba(128, 128, 128, 0.2);
+  padding-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.inline-edit-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--icon-color);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+}
+
+.inline-edit-actions .save-edit-btn {
+  color: var(--fab-bg-color);
+}
+
+.edit-mode-selector {
+  display: flex;
+  gap: 8px;
+  margin-right: auto; /* 右側の保存・キャンセルボタンから離す */
+}
+
+.edit-type-btn {
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--icon-color);
+}
+
+.edit-type-btn.active {
+  background-color: var(--player-system-bg);
+  color: var(--fab-bg-color);
+  border-color: var(--fab-bg-color);
+}
+
+.ai-turn-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* 左寄せ */
+  margin-right: auto;
+}
+
+.regenerate-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--secondary-text-color);
+  padding: 5px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.ai-turn-wrapper:hover .regenerate-btn {
+  opacity: 1;
+}
+
+.system-message {
+  text-align: center;
+  color: var(--secondary-text-color);
+  font-size: 0.9em;
+}
+
+.system-question {
+  margin: 15px auto;
+  padding: 10px 15px;
+  background-color: var(--system-question-bg);
+  border: 1px solid var(--system-question-border);
+  border-radius: 8px;
+  color: var(--system-question-text);
+  font-size: 0.95em;
+  max-width: 90%;
+  text-align: left;
+  word-wrap: break-word;
+}
+
+.chat-message.player-system {
+  background-color: var(--player-system-bg);
+  color: var(--player-system-text);
+  border: 1px solid var(--player-system-border);
+  margin-left: auto;
+}
+
+.page-content#chat-container {
+  /* 固定フッターにコンテンツが隠れないように、十分な下パディングを確保 */
+  padding-bottom: 100px;
+}
+
+.chat-footer {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 800px;
+  background-color: var(--page-bg-color);
+  z-index: 20;
+}
+
+.input-bar {
+  display: flex;
+  position: relative;
+  border: 1px solid var(--input-bar-border);
+  border-radius: 22px;
+  background-color: var(--input-bar-bg);
+  margin: 10px;
+}
+
+.input-bar-controls {
+  right: 5px;
+  bottom: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5px 10px;
+  flex-shrink: 0; /* コントロール部分が縮まないようにする */
+}
+
+.length-slider-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  width: 100px; /* スライダー全体の幅 */
+}
+
+#length-value-display {
+  font-size: 0.7em;
+  color: var(--secondary-text-color);
+  width: 30px; /* 数字表示部分の幅 */
+  text-align: right;
+  margin-right: 5px;
+}
+
+#length-control-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  background: var(--slider-track-bg);
+  outline: none;
+  border-radius: 5px;
+}
+
+.chat-buttons {
+  display: flex;
+}
+
+#input-mode-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 5px;
+}
+
+/* --- Footer Menu --- */
+#footer-menu-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#footer-menu-options {
+  display: flex; /* JSで制御 */
+  flex-direction: column-reverse; /* アイコンを上方向に展開 */
+  position: absolute;
+  bottom: 50px; /* main button height + gap */
+  gap: 8px;
+}
+
+#input-mode-options {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  bottom: 50px; /* main button height + gap */
+  gap: 8px;
+}
+
+.input-mode-btn {
+  background-color: var(--bg-color);
+  border: 1px solid transparent;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0 2px;
+  color: var(--icon-color);
+}
+.input-mode-btn.active {
+  background-color: var(--player-system-bg);
+  color: var(--fab-bg-color);
+}
+
+#player-input {
+  flex-grow: 1;
+  border: 1px solid #ffffff;
+  background-color: #fff;
+  border-radius: 22px;
+  padding: 10px 10px 10px 15px; /* 右側にコントロール分の余白を確保 */
+  font-size: 1em;
+  resize: none;
+  max-height: 100px;
+  overflow-y: auto;
+  outline: none;
+  box-sizing: border-box;
+}
+.dark-mode #player-input {
+    background-color: var(--input-bar-bg);
+    color: var(--text-color);
+}
+
+.chat-control-btn {
+  background: none;
+  border: none;
+  color: var(--fab-bg-color);
+  cursor: pointer;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chat-control-btn:disabled {
+  color: var(--secondary-text-color);
+  cursor: not-allowed;
+}
+.chat-control-btn .material-symbols-outlined {
+  font-size: 24px;
+}
+
+.char-count-indicator {
+  display: flex;
+  align-items: center; /* 水平方向の中央揃え */
+  gap: 8px; /* バーと文字数の間の隙間 */
+  margin-right: 12px;
+}
+
+.indicator-track {
+  position: relative;
+  width: 2px; /* 縦にするので幅を細く */
+  height: 40px; /* バーの高さ */
+  background-color: var(--border-color);
+  border-radius: 1px;
+  margin-right: 20px; /* ラベル表示用の余白 */
+  display: flex;
+  /* 縦にするので不要なプロパティを削除 */
+}
+
+.indicator-point {
+  position: absolute;
+  left: 8px; /* バーの右側に配置 */
+  font-size: 9px; /* ラベルのフォントを小さく */
+  color: var(--secondary-text-color);
+  transform: translateY(-50%); /* 垂直方向の中央揃え */
+  white-space: nowrap;
+}
+.indicator-point:nth-child(1) { top: 0%; }   /* 少 (上) */
+.indicator-point:nth-child(2) { top: 50%; }  /* 適切 (中央) */
+.indicator-point:nth-child(3) { top: 100%; } /* 多 (下) */
+
+.indicator-marker {
+  position: absolute;
+  left: 50%; /* バーの中央に配置 */
+  width: 8px; /* マーカーを小さく */
+  height: 8px; /* マーカーを小さく */
+  background-color: var(--fab-bg-color);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: top 0.3s ease; /* topプロパティをアニメーション */
+}
+.indicator-marker.level-low { top: 0%; }   /* 上 */
+.indicator-marker.level-mid { top: 50%; }  /* 中央 */
+.indicator-marker.level-high { top: 100%; } /* 下 */

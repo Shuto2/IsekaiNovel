@@ -1,0 +1,209 @@
+/* --- Generator Modal --- */
+#generator-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--modal-overlay-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+#generator-modal {
+  background-color: var(--page-bg-color);
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px; /* 少し広めにする */
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+#generator-modal h2 {
+  margin-top: 0;
+  text-align: center;
+}
+
+.generator-screen-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.generator-screen-header h3 {
+  margin: 0;
+  font-size: 1.2em;
+  flex-grow: 1;
+  text-align: center;
+  /* 戻るボタンの幅を考慮して少し左に調整 */
+  transform: translateX(-15px);
+}
+
+.generator-screen-header .back-btn {
+  margin-right: 10px;
+}
+
+#generator-modal .modal-content label {
+  display: block;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+#generator-modal .modal-content textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.95em;
+  box-sizing: border-box;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.generate-btn-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  border: none;
+  border-radius: 6px;
+  background-color: var(--fab-bg-color);
+  color: var(--fab-text-color);
+  font-size: 1em;
+  cursor: pointer;
+}
+.generate-btn-main .material-symbols-outlined {
+  margin-right: 8px;
+}
+
+.regenerate-btn, .action-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  margin-top: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.regenerate-btn:hover, .action-btn-secondary:hover {
+  border-color: var(--fab-bg-color);
+}
+
+.regenerate-btn .material-symbols-outlined {
+  margin-right: 6px;
+}
+
+.generate-btn-main:disabled, .regenerate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.generator-action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.generator-action-buttons .action-btn-secondary {
+  flex: 1; /* ボタンが均等な幅を占めるようにする */
+  margin-top: 0; /* 親要素でマージンを管理するためリセット */
+}
+
+#generator-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.generator-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  color: var(--text-color);
+  font-size: 0.9em;
+}
+
+.generator-btn:hover {
+  background-color: var(--card-bg-color);
+  border-color: var(--fab-bg-color);
+  color: var(--fab-bg-color);
+}
+
+.generator-btn .material-symbols-outlined {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+.generator-btn.unimplemented {
+  opacity: 0.6;
+  cursor: not-allowed;
+  position: relative; /* タグを配置するため */
+}
+
+.generator-btn.unimplemented:hover {
+  /* ホバーエフェクトを無効化 */
+  background-color: var(--bg-color);
+  border-color: var(--border-color);
+  color: var(--text-color);
+}
+
+.unimplemented-tag {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: var(--secondary-text-color);
+  color: var(--page-bg-color);
+  font-size: 9px;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+/* --- Generator Project Selection Modal --- */
+#generator-project-selection-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--modal-overlay-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1010; /* Generator modalの上に表示 */
+}
+
+#generator-project-selection-modal {
+  background-color: var(--page-bg-color);
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+#generator-project-selection-modal h2 {
+  margin-top: 0;
+  text-align: center;
+}

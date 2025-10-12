@@ -1,0 +1,111 @@
+/* --- Color Variables --- */
+:root {
+  --bg-color: #f0f2f5;
+  --page-bg-color: #ffffff;
+  --text-color: #1c1e21;
+  --secondary-text-color: #666;
+  --border-color: #e0e0e0;
+  --card-bg-color: #f9f9f9;
+  --card-border-color: #e9e9e9;
+  --icon-color: #65676b;
+  --fab-bg-color: #007bff;
+  --fab-text-color: white;
+  --player-bubble-bg: #0084ff;
+  --player-bubble-text: white;
+  --ai-bubble-bg: #e4e6eb;
+  --ai-bubble-text: #050505;
+  --system-question-bg: #fffbe6;
+  --system-question-border: #ffe58f;
+  --system-question-text: #8a6d3b;
+  --player-system-bg: #e7f3ff;
+  --player-system-text: #005a9e;
+  --player-system-border: #b3d7ff;
+  --input-bar-border: #ccc;
+  --input-bar-bg: #fff;
+  --slider-track-bg: #ddd;
+  --modal-overlay-bg: rgba(0, 0, 0, 0.6);
+}
+
+.dark-mode {
+  --bg-color: #18191a;
+  --page-bg-color: #242526;
+  --text-color: #e4e6eb;
+  --secondary-text-color: #b0b3b8;
+  --border-color: #3a3b3c;
+  --card-bg-color: #3a3b3c;
+  --card-border-color: #4e4f50;
+  --icon-color: #b0b3b8;
+  --ai-bubble-bg: #3a3b3c;
+  --ai-bubble-text: #e4e6eb;
+  --system-question-bg: #4d442a;
+  --system-question-border: #6e5f3a;
+  --system-question-text: #fffbe6;
+  --player-system-bg: #004a7c;
+  --player-system-text: #e7f3ff;
+  --player-system-border: #005a9e;
+  --input-bar-border: #4e4f50;
+  --input-bar-bg: #3a3b3c;
+  --slider-track-bg: #555;
+  --add-bubble-btn-color: var(--secondary-text-color);
+  --modal-overlay-bg: rgba(0, 0, 0, 0.8);
+}
+
+/* --- General --- */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  margin: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- Page Layout --- */
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: var(--page-bg-color);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 10px; /* 左右のpaddingを少し詰める */
+  border-bottom: 1px solid var(--border-color);
+}
+
+.page-header.sticky {
+  position: sticky;
+  top: 0;
+  background-color: var(--page-bg-color);
+  z-index: 10;
+}
+
+.header-title-group {
+  display: flex;
+  align-items: center;
+  margin: 0 auto; /* 左右のマージンを自動で設定し、グループ自体を中央に配置 */
+  min-width: 0; /* タイトルが長い場合にレイアウトが崩れるのを防ぐ */
+}
+
+.page-header h1 {
+  font-size: 1.2em;
+  padding: 0 10px;
+  /* タイトルが長い場合に省略記号を表示 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  flex-grow: 1; /* 残りのスペースを埋めるようにして、後続の要素を右に押しやる */
+}
+
+.page-content {
+  flex-grow: 1;
+  padding: 15px;
+  overflow-y: auto; /* コンテンツがはみ出した場合にこのエリアをスクロールさせる */
+  overscroll-behavior-y: contain; /* 親要素へのスクロール伝播を防ぐ */
+}

@@ -1,0 +1,471 @@
+/* --- Buttons --- */
+.back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px; /* クリック領域を確保 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--icon-color);
+  margin-left: -5px; /* 左端に寄せる */
+}
+.back-btn .material-symbols-outlined {
+  font-size: 24px;
+}
+
+.settings-btn {
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  padding: 0 10px;
+}
+.settings-btn .material-symbols-outlined {
+  font-size: 24px;
+  vertical-align: middle; /* アイコンの縦位置を中央に */
+}
+
+.header-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 5px;
+  color: var(--icon-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-title-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 5px;
+  opacity: 0.6;
+  color: var(--icon-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-title-btn .material-symbols-outlined {
+  font-size: 20px; /* アイコンのサイズを調整 */
+}
+
+.add-list-item-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px;
+  margin-top: 15px;
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  background-color: transparent;
+  color: var(--secondary-text-color);
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+.add-list-item-btn:hover {
+  background-color: var(--card-bg-color);
+  border-color: var(--fab-bg-color);
+  color: var(--fab-bg-color);
+}
+.add-list-item-btn .material-symbols-outlined {
+  margin-right: 8px;
+}
+
+/* --- Card Layout --- */
+.card {
+  background: var(--card-bg-color);
+  border: 1px solid var(--card-border-color);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card h3, .card h4 {
+  margin: 0; /* マージンをリセット */
+  font-size: 1.1em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-actions button {
+  margin-left: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: var(--page-bg-color);
+}
+.card-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0; /* アイコンが縮まないようにする */
+}
+
+.card-actions .open-project-btn, .card-actions .open-episode-btn {
+  background-color: var(--fab-bg-color);
+  color: var(--fab-text-color);
+  border-color: var(--fab-bg-color);
+}
+
+.card-actions .delete-project-btn, .card-actions .delete-episode-btn {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.card-icon-btn {
+  background: none !important;
+  border: none !important;
+  color: var(--icon-color) !important;
+  padding: 5px !important;
+  opacity: 0.8;
+  margin-left: 5px !important;
+  transition: opacity 0.2s;
+}
+
+.card-icon-btn:hover {
+  opacity: 1;
+}
+
+/* --- App Menu (Footer) --- */
+.app-menu {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  justify-content: space-around;
+  background-color: var(--page-bg-color);
+  border-top: 1px solid var(--border-color);
+  padding: 5px 0;
+}
+
+.app-menu-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--icon-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5px;
+  flex: 1; /* flexアイテムとして均等にスペースを占有する */
+  font-size: 10px;
+}
+
+/* --- Popover --- */
+#header-menu-container {
+  position: relative;
+  margin-left: auto; /* 右寄せにする */
+  display: flex; /* 中のボタンを垂直中央に配置するため */
+  align-items: center;
+}
+
+.popover-action-btn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 15px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95em;
+  color: var(--text-color);
+}
+.popover-action-btn .material-symbols-outlined {
+  margin-right: 15px;
+  color: var(--icon-color);
+}
+
+.popover {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: var(--page-bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  width: 280px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1010;
+  padding: 5px 0; /* 上下のpaddingを調整 */
+}
+
+.popover-list-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.popover-list-item:hover {
+  background-color: var(--bg-color);
+}
+
+.popover-list-item input[type="checkbox"] {
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.popover-list-item label {
+  font-size: 0.9em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- Modals --- */
+.modal-content {
+  overflow-y: auto; /* コンテンツがはみ出す場合にスクロール */
+  flex-grow: 1; /* 残りの高さをすべて埋める */
+  margin-bottom: 15px; /* アクションボタンとの間に余白を確保 */
+}
+.modal-content label {
+  display: block;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.modal-content textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 1em;
+  box-sizing: border-box; /* paddingを含めてwidth 100%にする */
+}
+
+.modal-content input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 1em;
+  box-sizing: border-box;
+}
+
+.modal-actions {
+  margin-top: 20px;
+  text-align: right;
+}
+
+.modal-action-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--icon-color);
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10px;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.modal-action-btn.primary {
+  background-color: var(--fab-bg-color);
+  border-color: var(--fab-bg-color);
+  color: var(--fab-text-color);
+}
+
+.modal-description {
+  font-size: 0.9em;
+  color: var(--secondary-text-color);
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+/* --- Settings Modal --- */
+#settings-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--modal-overlay-bg);
+  display: block; /* flexからblockに変更 */
+  overflow-y: auto; /* コンテンツが画面を超える場合にスクロールを許可 */
+  padding: 40px 0; /* 上下に余白を追加 */
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+#settings-modal {
+  background-color: var(--page-bg-color);
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  margin: 0 auto; /* 水平中央揃え */
+  display: flex; /* flexboxレイアウトを有効化 */
+  flex-direction: column; /* 子要素を縦に並べる */
+  max-height: 90vh; /* 画面の高さの90%を最大高さに設定 */
+}
+
+#settings-modal h2 {
+  margin-top: 0;
+  text-align: center;
+}
+
+/* --- Character Modals --- */
+#character-modal-overlay,
+#character-management-modal-overlay,
+#ai-settings-modal-overlay,
+#viewer-selection-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--modal-overlay-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+#character-modal,
+#character-management-modal,
+#ai-settings-modal,
+#viewer-selection-modal {
+  background-color: var(--page-bg-color);
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+#character-modal h2,
+#character-management-modal h2,
+#ai-settings-modal h2,
+#viewer-selection-modal h2 {
+  margin-top: 0;
+  text-align: center;
+}
+
+/* --- AI Settings Modal Specifics --- */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 15px; /* 要素間のスペースを確保 */
+}
+
+.setting-row label {
+  font-weight: normal;
+}
+
+.button-group {
+  display: flex;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.perspective-btn {
+  background-color: transparent;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  color: var(--secondary-text-color);
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.perspective-btn.active {
+  background-color: var(--fab-bg-color);
+  color: var(--fab-text-color);
+}
+
+/* --- Viewer Selection Modal Specifics --- */
+.viewer-selection-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.viewer-selection-list-item {
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.viewer-selection-list-item:hover {
+  background-color: var(--bg-color);
+}
+
+.viewer-selection-list-item:last-child {
+  border-bottom: none;
+}
+
+.modal-actions #viewer-selection-back-btn {
+  margin-right: auto;
+  margin-left: 0;
+}
+
+/* --- Global Loading Overlay --- */
+#global-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--modal-overlay-bg); /* 半透明の背景 */
+  z-index: 1999; /* 小説ビューワーよりは下、他よりは上 */
+  cursor: wait; /* カーソルを待機状態に */
+  /* display: flex; JS側で制御するため、ここでは削除 */
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-text {
+  color: white;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-align: center;
+  padding: 20px;
+  max-width: 80%;
+  animation: blink-animation 1.8s infinite; /* 既存の点滅アニメーションを再利用 */
+}
+
+/* 点滅アニメーション */
+@keyframes blink-animation {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.header-action-btn.blinking {
+  animation: blink-animation 1.5s infinite;
+  color: var(--fab-bg-color); /* 点滅中は目立つように色を変更 */
+}
+
+/* --- Responsive Design for smaller screens --- */
+@media (max-width: 600px) {
+  .page-header h1 {
+    text-align: center;
+    font-size: 1em; /* タイトルフォントを少し小さくする */
+    padding: 0 5px; /* 左右の余白も少し詰める */
+  }
+}

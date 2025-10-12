@@ -4,8 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI協創インタラクティブノベル</title>
-  <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/project.css">
+  <link rel="stylesheet" href="css/editor.css">
+  <link rel="stylesheet" href="css/viewer.css">
+  <link rel="stylesheet" href="css/generator.css">
   <style>
     .card-meta {
       font-size: 0.8em;
@@ -18,7 +23,7 @@
 
   <!-- Page: Project List -->
   <div id="project-list-page" class="page">
-    <header class="page-header">
+    <header class="page-header sticky">
       <h1>プロジェクト一覧</h1>
       <!-- ヘッダーのアクションボタンはフッターに移動 -->
     </header>
@@ -282,7 +287,7 @@
         <!-- World Generator Screen -->
         <div id="generator-world-screen" style="display: none;">
           <div class="generator-screen-header">
-            <button id="back-to-generator-main-btn" class="back-btn"><span class="material-symbols-outlined">arrow_back</span></button>
+            <button id="back-to-generator-main-btn" class="back-btn back-to-generator-main-btn"><span class="material-symbols-outlined">arrow_back</span></button>
             <h3>世界観ジェネレーター</h3>
           </div>
           <label for="world-keywords-input">キーワード</label>
@@ -356,7 +361,12 @@
     </div>
   </div>
 
-   <script src="script.js"></script>
-   <script src="generator.js"></script>
+   <!-- Modules -->
+   <script src="js/state.js"></script>
+   <script src="js/api.js"></script>
+   <script src="js/ui.js"></script>
+   <script src="js/events.js"></script>
+   <script src="js/main.js"></script>
+   <script src="js/generator.js"></script>
 </body>
 </html>

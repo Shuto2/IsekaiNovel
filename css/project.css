@@ -1,0 +1,51 @@
+/* --- Project & Episode Card Specifics --- */
+
+.project-card {
+  display: block; /* flexを解除し、中のdivが縦に並ぶようにする */
+  cursor: pointer; /* クリック可能であることを示す */
+}
+
+.project-card-title {
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.project-card-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.project-card-meta {
+  font-size: 0.8em;
+  color: var(--secondary-text-color);
+}
+
+.project-card-meta p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.episode-card {
+  display: block; /* flexレイアウトを解除して縦に並べる */
+  cursor: pointer; /* クリック可能であることを示す */
+}
+
+.card-main-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* あらすじがある場合に備えて、下に少し余白を設ける */
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.card-summary {
+  font-size: 0.85em;
+  color: var(--secondary-text-color);
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+  white-space: pre-wrap; /* Allow wrapping */
+}
