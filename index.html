@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI協創インタラクティブノベル</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <style>
+    .card-meta {
+      font-size: 0.8em;
+      color: #666;
+      margin-top: -10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Page: Project List -->
+  <div id="project-list-page" class="page">
+    <header class="page-header">
+      <h1>プロジェクト一覧</h1>
+      <!-- ヘッダーのアクションボタンはフッターに移動 -->
+    </header>
+    <main class="page-content" id="project-cards-container">
+      <!-- Project cards will be inserted here by JavaScript -->
+      <button id="new-project-btn" class="add-list-item-btn"><span class="material-symbols-outlined">add</span>新しい物語を始める</button>
+    </main>
+    <input type="file" id="import-file-input" accept=".json" style="display: none;">
+    <footer class="app-menu">
+      <button class="app-menu-btn active" data-target="project-list-page"><span class="material-symbols-outlined">description</span><span class="app-menu-label">プロジェクト</span></button>
+      <button class="app-menu-btn" data-action="open-generator"><span class="material-symbols-outlined">auto_awesome</span><span class="app-menu-label">ジェネレータ</span></button>
+      <button class="app-menu-btn" data-action="open-viewer"><span class="material-symbols-outlined">menu_book</span><span class="app-menu-label">ビューアー</span></button>
+      <button class="app-menu-btn" data-action="import"><span class="material-symbols-outlined">upload_file</span><span class="app-menu-label">インポート</span></button>
+      <div id="footer-menu-container" class="app-menu-btn">
+        <div id="footer-menu-options" style="display: none;">
+            <button id="theme-toggle-btn" class="input-mode-btn" title="テーマ切替"><span class="material-symbols-outlined">dark_mode</span></button>
+            <button id="api-key-settings-btn" class="input-mode-btn" title="APIキー設定"><span class="material-symbols-outlined">vpn_key</span></button>
+        </div>
+        <button id="main-footer-menu-btn" class="app-menu-btn" style="padding:0; margin:0;"><span class="material-symbols-outlined">settings</span><span class="app-menu-label">設定</span></button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Page: Project Detail (Episode List) -->
+  <div id="project-detail-page" class="page" style="display: none;">
+    <header class="page-header sticky">
+      <button class="back-btn" data-target="project-list-page"><span class="material-symbols-outlined">arrow_back</span></button>
+      <div class="header-title-group">
+        <h1 id="project-title">プロジェクトタイトル</h1>
+        <button id="edit-project-title-btn" class="edit-title-btn"><span class="material-symbols-outlined">edit_square</span></button>
+      </div>
+      <button id="project-settings-btn" class="header-action-btn settings-btn"><span class="material-symbols-outlined">settings</span></button>
+    </header>
+    <main class="page-content" id="episode-cards-container">
+      <!-- Episode cards will be inserted here by JavaScript -->
+      <button id="new-episode-btn" class="add-list-item-btn"><span class="material-symbols-outlined">add</span>新しいエピソードを作成</button>
+    </main>
+    <footer class="app-menu">
+      <button id="footer-back-to-project-list" class="app-menu-btn active"><span class="material-symbols-outlined">description</span><span class="app-menu-label">プロジェクト</span></button>
+      <button class="app-menu-btn" data-action="open-generator"><span class="material-symbols-outlined">auto_awesome</span><span class="app-menu-label">ジェネレータ</span></button>
+      <button class="app-menu-btn" data-action="open-viewer"><span class="material-symbols-outlined">menu_book</span><span class="app-menu-label">ビューアー</span></button>
+      <button class="app-menu-btn" data-action="import"><span class="material-symbols-outlined">upload_file</span><span class="app-menu-label">インポート</span></button>
+      <div class="app-menu-btn"> <!-- idは重複させないため、project-list-pageのものだけにする -->
+        <div style="display: none;"> <!-- このページのメニューは機能しないため非表示 -->
+            <button class="input-mode-btn" title="テーマ切替"><span class="material-symbols-outlined">dark_mode</span></button>
+            <button class="input-mode-btn" title="APIキー設定"><span class="material-symbols-outlined">vpn_key</span></button>
+        </div>
+        <button class="app-menu-btn" style="padding:0; margin:0;"><span class="material-symbols-outlined">settings</span><span class="app-menu-label">設定</span></button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Page: Episode Editor -->
+  <div id="episode-editor-page" class="page" style="display: none;">
+    <header class="page-header sticky">
+      <button class="back-btn" data-target="project-detail-page"><span class="material-symbols-outlined">arrow_back</span></button>
+      <div class="header-title-group">
+        <!-- 文字数インジケーターコンテナ -->
+        <div id="char-count-indicator-container" class="char-count-indicator">
+          <div class="indicator-track">
+            <div class="indicator-point">少</div>
+            <div class="indicator-point">適切</div>
+            <div class="indicator-point">多</div>
+            <div id="indicator-marker" class="indicator-marker"></div>
+          </div>
+          <span id="episode-char-count" class="char-count-display"></span>
+        </div>
+        <h1 id="episode-title">エピソードタイトル</h1>
+        <button id="edit-episode-title-btn" class="edit-title-btn"><span class="material-symbols-outlined">edit_square</span></button>
+      </div>
+      <!-- Header Menu -->
+      <div id="header-menu-container">
+        <button id="header-menu-btn" class="header-action-btn"><span class="material-symbols-outlined">more_vert</span></button>
+        <div id="header-menu-popover" class="popover" style="display: none;">
+          <!-- Character Manager -->
+          <button id="manage-characters-btn" class="popover-action-btn"><span class="material-symbols-outlined">group</span>キャラクター管理</button>
+          <button id="ai-settings-btn" class="popover-action-btn"><span class="material-symbols-outlined">psychology_alt</span>AI設定</button>
+          <button id="add-character-btn" class="popover-action-btn"><span class="material-symbols-outlined">person_add</span>キャラクター追加</button>
+          <button id="complete-episode-btn" class="popover-action-btn" title="このエピソードを完了させます"><span class="material-symbols-outlined">check_circle</span>エピソード完了</button>
+        </div>
+      </div>
+    </header>
+    <main class="page-content" id="chat-container">
+      <!-- Chat messages will be inserted here -->
+    </main>
+    <footer class="chat-footer">
+      <div class="input-bar">
+        <textarea id="player-input" placeholder="ここに「行動」「発言」「心の声」を入力..." rows="2"></textarea>
+        <div class="input-bar-controls">
+          <div class="length-slider-container">
+            <span id="length-value-display">200</span>
+            <input type="range" id="length-control-slider" min="100" max="1000" step="100" value="200">
+          </div>
+          <div class="chat-buttons">
+            <button id="ai-generate-btn" class="chat-control-btn" title="入力してAIに応答を生成させる"><span class="material-symbols-outlined">auto_awesome</span></button>
+            <div id="input-mode-container">
+              <div id="input-mode-options" style="display: none;">
+                <button class="input-mode-btn" data-mode="system" title="システム指示"><span class="material-symbols-outlined">settings_suggest</span></button>
+                <button class="input-mode-btn" data-mode="thought" title="心の声"><span class="material-symbols-outlined">psychology</span></button>
+                <button class="input-mode-btn" data-mode="speech" title="発言"><span class="material-symbols-outlined">record_voice_over</span></button>
+                <button class="input-mode-btn" data-mode="action" title="行動"><span class="material-symbols-outlined">directions_run</span></button>
+              </div>
+              <button id="main-input-mode-btn" class="input-mode-btn active" data-mode="action" title="入力モード切替"><span class="material-symbols-outlined">directions_run</span></button>
+            </div>
+            <button id="send-only-btn" class="chat-control-btn" title="入力のみ追加（AI応答なし）"><span class="material-symbols-outlined">send</span></button>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal-overlay" style="display: none;">
+    <div id="settings-modal">
+      <h2>プロジェクト設定</h2>
+      <div class="modal-content">
+        <label for="world-setting-input">世界観</label>
+        <textarea id="world-setting-input" rows="5" placeholder="例: 剣と魔法が存在する中世ヨーロッパ風のファンタジー世界。エルフやドワーフなどの亜人も共存している。"></textarea>
+
+        <label for="protagonist-setting-input">主人公設定</label>
+        <textarea id="protagonist-setting-input" rows="3" placeholder="例: 17歳の高校生、鈴木太郎。ある日トラックに轢かれ異世界へ。特別なスキルはないが、持ち前の人の良さと現代知識で困難を乗り越える。"></textarea>
+
+        <label for="protagonist-pronoun-input">主人公の一人称代名詞</label>
+        <input type="text" id="protagonist-pronoun-input" placeholder="例: 俺、私、僕 (AIが一人称視点で描写する際に使用)">
+
+        <div class="modal-label-group">
+          <label>プロジェクト全体の登場人物</label>
+          <button id="add-project-character-btn" class="add-char-in-modal-btn"><span class="material-symbols-outlined">person_add</span>追加</button>
+        </div>
+        <div id="project-character-editor" class="character-editor-container">
+          <div id="project-character-list-container" class="character-list-column">
+            <!-- Character list will be rendered here -->
+          </div>
+          <div id="project-character-detail-area" class="character-detail-column" style="display: none;">
+            <label for="edit-char-name-input">名前</label>
+            <input type="text" id="edit-char-name-input" placeholder="キャラクター名">
+            <label for="edit-char-faction-input">勢力</label>
+            <div class="faction-input-wrapper">
+              <input type="text" id="edit-char-faction-input" list="faction-suggestions" placeholder="所属する勢力名 (例: 王国, ギルド)" class="has-icon">
+              <datalist id="faction-suggestions"></datalist>
+            </div>
+            <label for="edit-char-desc-input">説明</label>
+            <textarea id="edit-char-desc-input" rows="4" placeholder="キャラクター説明"></textarea>
+            <button id="delete-char-btn" class="delete-char-btn"><span class="material-symbols-outlined">delete</span>このキャラクターを削除</button>
+          </div>
+        </div>
+      </div>
+      <!-- ボタンは自動保存化に伴い不要になったため削除 -->
+    </div>
+  </div>
+
+  <!-- Character Modal -->
+  <div id="character-modal-overlay" style="display: none;">
+    <div id="character-modal">
+      <h2>キャラクター追加</h2>
+      <div class="modal-content">
+        <label for="character-name-input">キャラクター名</label>
+        <input type="text" id="character-name-input" placeholder="例: 剣士アレク">
+
+        <label for="character-desc-input">キャラクター説明</label>
+        <textarea id="character-desc-input" rows="4" placeholder="例: 王国一の剣の腕を持つが、お人好しな性格。"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button id="close-character-btn" class="modal-action-btn" title="閉じる"><span class="material-symbols-outlined">close</span></button>
+        <button id="save-character-btn" class="modal-action-btn primary" title="保存"><span class="material-symbols-outlined">save</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Character Management Modal -->
+  <div id="character-management-modal-overlay" style="display: none;">
+    <div id="character-management-modal">
+      <h2>キャラクター管理</h2>
+      <div class="modal-content">
+        <p class="modal-description">このエピソードに登場させるキャラクターを選択してください。</p>
+        <div id="character-list-popover" class="character-list-in-modal">
+          <!-- Character list will be rendered here by JS -->
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="close-character-management-btn" class="modal-action-btn" title="閉じる"><span class="material-symbols-outlined">close</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Settings Modal -->
+  <div id="ai-settings-modal-overlay" style="display: none;">
+    <div id="ai-settings-modal">
+      <h2>AI設定</h2>
+      <div class="modal-content">
+        <div class="setting-row">
+          <label>AIの視点</label>
+          <div id="perspective-buttons" class="button-group">
+            <button class="perspective-btn" data-perspective="third">三人称</button>
+            <button class="perspective-btn" data-perspective="first">一人称</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="close-ai-settings-btn" class="modal-action-btn" title="閉じる"><span class="material-symbols-outlined">close</span></button>
+        <button id="save-ai-settings-btn" class="modal-action-btn primary" title="保存"><span class="material-symbols-outlined">save</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Novel Viewer Modal -->
+  <div id="novel-viewer-overlay" style="display: none;">
+    <div id="novel-viewer">
+      <div class="novel-page">
+        <div id="novel-content" class="novel-content-inner">
+          <!-- Novel text will be rendered here -->
+        </div>
+      </div>
+    </div>
+    <button id="next-episode-btn" class="novel-viewer-nav-btn left" style="display: none;" title="次のエピソードへ">
+      <span class="material-symbols-outlined">chevron_left</span>
+    </button>
+    <button id="close-novel-viewer-btn" class="novel-viewer-close-btn">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </div>
+
+  <!-- Viewer Selection Modal -->
+  <div id="viewer-selection-modal-overlay" style="display: none;">
+    <div id="viewer-selection-modal">
+      <h2 id="viewer-selection-title">プロジェクトを選択</h2>
+      <div id="viewer-selection-content" class="modal-content">
+        <!-- Project/Episode list will be rendered here -->
+      </div>
+      <div class="modal-actions">
+        <button id="viewer-selection-back-btn" class="modal-action-btn" title="戻る" style="display: none;"><span class="material-symbols-outlined">arrow_back</span></button>
+        <button id="close-viewer-selection-btn" class="modal-action-btn" title="閉じる"><span class="material-symbols-outlined">close</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Loading Overlay -->
+  <div id="global-loading-overlay" style="display: none;">
+    <div id="loading-text" class="loading-text"></div>
+  </div>
+
+  <!-- Generator Modal -->
+  <div id="generator-modal-overlay" style="display: none;">
+    <div id="generator-modal">
+      <h2>ジェネレーター</h2>
+      <div class="modal-content">
+        <!-- Main Generator Screen -->
+        <div id="generator-main-screen">
+          <p class="modal-description">生成したい項目を選択してください。</p>
+          <div id="generator-grid">
+            <button class="generator-btn" data-generator="world"><span class="material-symbols-outlined">public</span><span>世界観</span></button>
+            <button class="generator-btn" data-generator="protagonist"><span class="material-symbols-outlined">person</span><span>主人公</span></button>
+            <button class="generator-btn" data-generator="character"><span class="material-symbols-outlined">groups</span><span>キャラクター</span></button>
+            <button class="generator-btn unimplemented" data-generator="event"><span class="unimplemented-tag">未実装</span><span class="material-symbols-outlined">bolt</span><span>導入イベント</span></button>
+            <button class="generator-btn unimplemented" data-generator="quest"><span class="unimplemented-tag">未実装</span><span class="material-symbols-outlined">flag</span><span>目的/クエスト</span></button>
+            <button class="generator-btn unimplemented" data-generator="item"><span class="unimplemented-tag">未実装</span><span class="material-symbols-outlined">diamond</span><span>アイテム</span></button>
+            <button class="generator-btn unimplemented" data-generator="naming"><span class="unimplemented-tag">未実装</span><span class="material-symbols-outlined">badge</span><span>ネーミング</span></button>
+          </div>
+        </div>
+
+        <!-- World Generator Screen -->
+        <div id="generator-world-screen" style="display: none;">
+          <div class="generator-screen-header">
+            <button id="back-to-generator-main-btn" class="back-btn"><span class="material-symbols-outlined">arrow_back</span></button>
+            <h3>世界観ジェネレーター</h3>
+          </div>
+          <label for="world-keywords-input">キーワード</label>
+          <textarea id="world-keywords-input" rows="2" placeholder="例: 魔法, 荒廃した世界, スチームパンク"></textarea>
+          <button id="generate-world-btn" class="generate-btn-main"><span class="material-symbols-outlined">auto_awesome</span>生成する</button>
+          <label for="world-result-output">生成結果</label>
+          <textarea id="world-result-output" rows="6" placeholder="ここに世界観の設定が生成されます..."></textarea>
+          <button id="regenerate-world-btn" class="regenerate-btn"><span class="material-symbols-outlined">replay</span>再生成</button>
+          <p class="modal-description">この設定をどうしますか？</p>
+          <div class="generator-action-buttons">
+            <button id="create-project-from-world-btn" class="action-btn-secondary">新規プロジェクトとして作成</button>
+            <button id="copy-world-to-project-btn" class="action-btn-secondary">既存プロジェクトにコピー</button>
+          </div>
+        </div>
+
+        <!-- Protagonist Generator Screen -->
+        <div id="generator-protagonist-screen" style="display: none;">
+          <div class="generator-screen-header">
+            <button class="back-to-generator-main-btn back-btn"><span class="material-symbols-outlined">arrow_back</span></button>
+            <h3>主人公ジェネレーター</h3>
+          </div>
+          <label for="protagonist-keywords-input">キーワード</label>
+          <textarea id="protagonist-keywords-input" rows="2" placeholder="例: 高校生, 優しい, 巻き込まれ体質"></textarea>
+          <button id="generate-protagonist-btn" class="generate-btn-main"><span class="material-symbols-outlined">auto_awesome</span>生成する</button>
+          <label for="protagonist-result-output">生成結果</label>
+          <textarea id="protagonist-result-output" rows="6" placeholder="ここに主人公の設定が生成されます..."></textarea>
+          <button id="regenerate-protagonist-btn" class="regenerate-btn"><span class="material-symbols-outlined">replay</span>再生成</button>
+          <p class="modal-description">この設定をどうしますか？</p>
+          <div class="generator-action-buttons">
+            <button id="create-project-from-protagonist-btn" class="action-btn-secondary">新規プロジェクトの主人公に設定</button>
+            <button id="copy-protagonist-to-project-btn" class="action-btn-secondary">既存プロジェクトの主人公に設定</button>
+          </div>
+        </div>
+
+        <!-- Character Generator Screen -->
+        <div id="generator-character-screen" style="display: none;">
+          <div class="generator-screen-header">
+            <button class="back-to-generator-main-btn back-btn"><span class="material-symbols-outlined">arrow_back</span></button>
+            <h3>キャラクタージェネレーター</h3>
+          </div>
+          <label for="character-keywords-input">キーワード</label>
+          <textarea id="character-keywords-input" rows="2" placeholder="例: 寡黙な剣士, 元暗殺者, 甘いもの好き"></textarea>
+          <button id="generate-character-btn" class="generate-btn-main"><span class="material-symbols-outlined">auto_awesome</span>生成する</button>
+          <label for="character-result-output">生成結果</label>
+          <textarea id="character-result-output" rows="6" placeholder="ここにキャラクターの設定が生成されます..."></textarea>
+          <button id="regenerate-character-btn" class="regenerate-btn"><span class="material-symbols-outlined">replay</span>再生成</button>
+          <p class="modal-description">この設定をどうしますか？</p>
+          <div class="generator-action-buttons">
+            <button id="copy-character-to-project-btn" class="action-btn-secondary">既存プロジェクトに追加</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="close-generator-btn" class="modal-action-btn" title="閉じる"><span class="material-symbols-outlined">close</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generator Project Selection Modal -->
+  <div id="generator-project-selection-overlay" style="display: none;">
+    <div id="generator-project-selection-modal">
+      <h2>コピー先のプロジェクトを選択</h2>
+      <div class="modal-content">
+        <ul id="generator-project-selection-list" class="viewer-selection-list">
+          <!-- Project list will be rendered here -->
+        </ul>
+      </div>
+      <div class="modal-actions">
+        <button id="close-generator-project-selection-btn" class="modal-action-btn" title="閉じる"><span class="material-symbols-outlined">close</span></button>
+      </div>
+    </div>
+  </div>
+
+   <script src="script.js"></script>
+   <script src="generator.js"></script>
+</body>
+</html>
