@@ -1,73 +1,48 @@
 function initializeEventListeners() {
-  // Page Navigation
-  document.querySelectorAll('.back-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const button = e.target.closest('.back-btn');
-      if (!button) return;
 
-      // data-target属性がないボタン（ジェネレーターの戻るボタンなど）は何もしない
-      if (!button.dataset.target) return;
-
-      const targetPageId = button.dataset.target.replace('-page', '').replace(/-(\w)/g, (match, letter) => letter.toUpperCase());
-
-      if (targetPageId === 'projectList') {
-        currentProjectId = null;
-        renderProjectList();
-      } else if (targetPageId === 'projectDetail') {
-        currentEpisodeId = null;
-        renderProjectDetail();
+  // Back buttons
+  document.body.addEventListener('click', (e) => {
+    if (e.target.closest('.back-btn')) {
+      const targetPage = e.target.closest('.back-btn').dataset.target;
+      if (targetPage) {
+        if (targetPage === 'project-list-page') {
+          renderProjectList();
+          showPage('projectList');
+        } else if (targetPage === 'project-detail-page') {
+          renderProjectDetail();
+          showPage('projectDetail');
+        }
       }
+    }
+  });
+
+  // Footer menu buttons
+  document.querySelectorAll('.app-menu-btn[data-target]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetPageId = btn.dataset.target.replace('-page', ''); // 'project-list-page' -> 'projectList'
       showPage(targetPageId);
     });
   });
 
+  // Specific handler for the back button in the project detail footer
   if (ui.footerBackToProjectListBtn) {
-    ui.footerBackToProjectListBtn.addEventListener('click', () => {
-      currentProjectId = null;
-      renderProjectList();
-      showPage('projectList');
-    });
+    ui.footerBackToProjectListBtn.addEventListener('click', () => showPage('projectList'));
   }
 
-  // App Menu Navigation
-  document.querySelectorAll('.app-menu').forEach(menu => {
-    menu.addEventListener('click', (e) => {
-      const button = e.target.closest('button.app-menu-btn');
+  // --- Project List Page ---
 
-      if (!button || button.id === 'footer-back-to-project-list' || button.id === 'main-footer-menu-btn') {
-        return;
-      }
-
-      const targetPage = button.dataset.target;
-      if (targetPage === 'project-list-page') {
-        currentProjectId = null;
-        currentEpisodeId = null;
-        renderProjectList();
-        showPage('projectList');
-        return;
-      }
-
-      if (button.dataset.action === 'import') {
-        ui.importFileInput.click();
-      } else if (button.dataset.action === 'open-viewer') {
-        openViewerSelectionModal();
-      } else if (button.dataset.action === 'open-generator') {
-        openGeneratorModal();
-      }
-    });
-  });
-
-  // Project List Page
+  // New Project Button
   ui.newProjectBtn.addEventListener('click', () => {
-    const title = prompt("新しいプロジェクトのタイトルを入力してください:", "無題の物語");
+    const title = prompt('新しい物語のタイトルを入力してください:', '無題の物語');
     if (title) {
       const newProject = {
         id: Date.now().toString(),
         title: title,
-        episodes: [],
         world: '',
+        episodes: [],
         characters: [],
         protagonist: { desc: '', pronoun: '' },
+        ai_settings: { perspective: 'third' },
         lastUpdated: new Date().toISOString(),
       };
       db.projects.push(newProject);
@@ -76,476 +51,427 @@ function initializeEventListeners() {
     }
   });
 
+  // Project cards container event delegation
   ui.projectCardsContainer.addEventListener('click', (e) => {
-    if (ui.pages.projectList.style.display === 'none') return;
+    const card = e.target.closest('.project-card');
+    if (!card) return;
 
-    const deleteBtn = e.target.closest('.delete-project-btn');
-    if (deleteBtn) {
-      const projectId = deleteBtn.dataset.id;
-      if (confirm("本当にこのプロジェクトを削除しますか？元に戻せません。")) {
+    // Delete button
+    if (e.target.closest('.delete-project-btn')) {
+      const projectId = card.dataset.id;
+      const project = db.projects.find(p => p.id === projectId);
+      if (project && confirm(`「${project.title}」を削除しますか？この操作は元に戻せません。`)) {
         db.projects = db.projects.filter(p => p.id !== projectId);
         saveDB();
         renderProjectList();
       }
+      return; // Prevent navigating to detail page
+    }
+
+    // Export button
+    if (e.target.closest('.export-project-btn')) {
+      const projectId = card.dataset.id;
+      exportProject(projectId);
       return;
     }
 
-    const exportBtn = e.target.closest('.export-project-btn');
-    if (exportBtn) {
-      exportProject(exportBtn.dataset.id);
-      return;
-    }
+    // Open project detail
+    currentProjectId = card.dataset.id;
+    renderProjectDetail();
+    showPage('projectDetail');
+  });
 
-    const card = e.target.closest('.project-card');
-    if (card) {
-      currentProjectId = card.dataset.id;
-      renderProjectDetail();
-      showPage('projectDetail');
+  // --- Project Detail Page ---
+
+  // New Episode Button
+  ui.newEpisodeBtn.addEventListener('click', () => {
+    const title = prompt('新しいエピソードのタイトルを入力してください:', '無題のエピソード');
+    if (title) {
+      const project = db.projects.find(p => p.id === currentProjectId);
+      if (project) {
+        const newEpisode = {
+          id: Date.now().toString(),
+          title: title,
+          turns: [],
+          activeCharacters: [],
+          summary: '',
+          initial_ai_question: '物語はどこから始まりますか？'
+        };
+        if (!project.episodes) project.episodes = [];
+        project.episodes.push(newEpisode);
+        saveDB();
+        renderProjectDetail();
+      }
     }
   });
 
-  // Project Detail Page
-  ui.newEpisodeBtn.addEventListener('click', () => {
+  // Episode cards container event delegation
+  ui.episodeCardsContainer.addEventListener('click', (e) => {
+    const card = e.target.closest('.episode-card');
+    if (!card) return;
+
+    // Delete button
+    if (e.target.closest('.delete-episode-btn')) {
+      const episodeId = card.dataset.id;
+      const project = db.projects.find(p => p.id === currentProjectId);
+      const episode = project?.episodes.find(ep => ep.id === episodeId);
+      if (episode && confirm(`「${episode.title}」を削除しますか？`)) {
+        project.episodes = project.episodes.filter(ep => ep.id !== episodeId);
+        saveDB();
+        renderProjectDetail();
+      }
+      return;
+    }
+
+    // Open episode editor
+    currentEpisodeId = card.dataset.id;
+    renderEpisodeEditor();
+    showPage('episodeEditor');
+  });
+
+  // Novel viewer button on episode card
+  ui.episodeCardsContainer.addEventListener('click', (e) => {
+    const viewerBtn = e.target.closest('.novel-viewer-btn');
+    if (viewerBtn) {
+      e.stopPropagation(); // Prevent navigating to editor
+      const episodeId = viewerBtn.dataset.id;
+      openNovelViewer(episodeId);
+    }
+  });
+
+  // Edit Project Title
+  ui.editProjectTitleBtn.addEventListener('click', () => {
     const project = db.projects.find(p => p.id === currentProjectId);
     if (!project) return;
-
-    const title = prompt("新しいエピソードのタイトルを入力してください:", `エピソード ${project.episodes.length + 1}`);
-    if (title) {
-      let initialActiveCharacters = [];
-      if (project.episodes.length > 0) {
-        const lastEpisode = project.episodes[project.episodes.length - 1];
-        if (lastEpisode.activeCharacters) {
-          initialActiveCharacters = [...lastEpisode.activeCharacters];
-        }
-      }
-      const newEpisode = {
-        id: Date.now().toString(),
-        title: title,
-        characters: '',
-        activeCharacters: initialActiveCharacters,
-        initial_ai_question: project.episodes.length === 0 ? '異世界転生する前の話を入れますか？入れるとすれば設定を教えてください。' : null,
-        turns: [],
-        summary: ''
-      };
-
-      if (project.episodes.length > 0) {
-        const lastEpisode = project.episodes[project.episodes.length - 1];
-        if (lastEpisode.turns && lastEpisode.turns.length > 0) {
-          const lastTurn = lastEpisode.turns[lastEpisode.turns.length - 1];
-          if (lastTurn.player_input && 'system' in lastTurn.player_input && !lastTurn.ai_output) {
-            const turnToMove = lastEpisode.turns.pop();
-            newEpisode.turns.push(turnToMove);
-            newEpisode.initial_ai_question = null;
-          } else if (lastTurn.ai_output && lastTurn.ai_output.system_question) {
-            newEpisode.initial_ai_question = lastTurn.ai_output.system_question;
-          }
-        }
-      }
-
-      project.episodes.push(newEpisode);
-      project.lastUpdated = new Date().toISOString();
+    const newTitle = prompt('新しいプロジェクトタイトルを入力してください:', project.title);
+    if (newTitle && newTitle !== project.title) {
+      project.title = newTitle;
       saveDB();
       renderProjectDetail();
     }
   });
 
-  if (ui.episodeCardsContainer) {
-    ui.episodeCardsContainer.addEventListener('click', (e) => {
-      if (ui.pages.projectDetail.style.display === 'none') return;
+  // Open Project Settings Modal
+  ui.projectSettingsBtn.addEventListener('click', openProjectSettings);
 
-      const deleteBtn = e.target.closest('.delete-episode-btn');
-      if (deleteBtn) {
-        const project = db.projects.find(p => p.id === currentProjectId);
-        if (project && confirm("本当にこのエピソードを削除しますか？")) {
-          project.episodes = project.episodes.filter(ep => ep.id !== deleteBtn.dataset.id);
-          project.lastUpdated = new Date().toISOString();
-          saveDB();
-          renderProjectDetail();
-        }
-        return;
-      }
-
-      const viewerBtn = e.target.closest('.novel-viewer-btn');
-      if (viewerBtn) {
-        openNovelViewer(viewerBtn.dataset.id);
-        return;
-      }
-
-      // カード自体がクリックされた場合の処理
-      const card = e.target.closest('.episode-card');
-      if (card) {
-        currentEpisodeId = card.dataset.id;
-        renderEpisodeEditor();
-        currentViewingEpisodeId = currentEpisodeId;
-        showPage('episodeEditor');
-        return;
-      }
-    });
-  }
-
-  // Theme Toggle
-  ui.themeToggleBtn.addEventListener('click', () => {
-      document.body.classList.toggle('dark-mode');
-      const isDarkMode = document.body.classList.contains('dark-mode');
-      localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-      updateThemeIcon(isDarkMode);
-  });
-
-  // API Key Settings
-  ui.apiKeySettingsBtn.addEventListener('click', () => {
-    const currentKey = localStorage.getItem('GG_API_KEY') || '';
-    const newKey = prompt('Google Generative Language API Key を入力してください:', currentKey);
-
-    if (newKey !== null) {
-      localStorage.setItem('GG_API_KEY', newKey);
-      alert('APIキーを保存しました。');
-    }
-  });
-
-  // File Import
-  ui.importFileInput.addEventListener('change', handleImportFile);
-
-  // Project Settings Modal
-  if (ui.projectSettingsBtn) {
-    ui.projectSettingsBtn.addEventListener('click', () => {
-      if (ui.pages.projectDetail.style.display === 'none') return;
-      openProjectSettings();
-    });
-  }
+  // --- Settings Modal ---
   ui.settingsModalOverlay.addEventListener('click', (e) => {
-      if (e.target === ui.settingsModalOverlay) ui.settingsModalOverlay.style.display = 'none';
+    if (e.target === ui.settingsModalOverlay) {
+      ui.settingsModalOverlay.style.display = 'none';
+    }
   });
 
-  const autoSaveProjectSettings = () => {
-    const project = db.projects.find(p => p.id === currentProjectId);
-    if (!project) return;
-
-    project.world = ui.worldSettingInput.value.trim();
-    if (!project.protagonist) project.protagonist = {};
-    project.protagonist.desc = ui.protagonistSettingInput.value.trim();
-    project.protagonist.pronoun = ui.protagonistPronounInput.value.trim();
-    project.lastUpdated = new Date().toISOString();
-    saveDB();
-  };
-  ui.worldSettingInput.addEventListener('input', autoSaveProjectSettings);
-  ui.protagonistSettingInput.addEventListener('input', autoSaveProjectSettings);
-  ui.protagonistPronounInput.addEventListener('input', autoSaveProjectSettings);
-
-  // Character Editor in Project Settings
-  const charNameInput = document.getElementById('edit-char-name-input');
-  const charFactionInput = document.getElementById('edit-char-faction-input');
-  const charDescInput = document.getElementById('edit-char-desc-input');
-
-  const autoSaveCharacter = (e) => {
-    const activeItem = document.querySelector('.character-list-item.active');
-    if (!activeItem) return;
-
-    const charId = activeItem.dataset.charId;
-    const project = db.projects.find(p => p.id === currentProjectId);
-    const character = project?.characters.find(c => c.id === charId);
-    if (!character) return;
-
-    const oldFaction = character.faction;
-
-    character.name = charNameInput.value.trim();
-    character.faction = charFactionInput.value.trim();
-    character.description = charDescInput.value.trim();
-
-    if (!character.name) {
-      deleteCharacter(charId);
-      return;
-    }
-
-    saveDB();
-    activeItem.textContent = character.name;
-
-    if (e.target.id === 'edit-char-faction-input' && oldFaction !== character.faction) {
-      renderProjectCharacterEditor(project);
-      setTimeout(() => {
-        const newItemEl = document.querySelector(`.character-list-item[data-char-id="${charId}"]`);
-        if (newItemEl) {
-          newItemEl.classList.add('active');
-          newItemEl.scrollIntoView({ block: 'nearest' });
-        }
-      }, 0);
-    }
-  };
-
-  charNameInput.addEventListener('input', autoSaveCharacter);
-  charFactionInput.addEventListener('input', autoSaveCharacter);
-  charDescInput.addEventListener('input', autoSaveCharacter);
-
-  document.getElementById('delete-char-btn').addEventListener('click', () => {
-    const activeItem = document.querySelector('.character-list-item.active');
-    if (activeItem) deleteCharacter(activeItem.dataset.charId);
+  // Auto-save for settings
+  [ui.worldSettingInput, ui.protagonistSettingInput, ui.protagonistPronounInput].forEach(input => {
+    input.addEventListener('input', () => {
+      const project = db.projects.find(p => p.id === currentProjectId);
+      if (!project) return;
+      project.world = ui.worldSettingInput.value;
+      if (!project.protagonist) project.protagonist = {};
+      project.protagonist.desc = ui.protagonistSettingInput.value;
+      project.protagonist.pronoun = ui.protagonistPronounInput.value;
+      saveDB();
+    });
   });
 
+  // Project settings character management
   ui.addProjectCharacterBtn.addEventListener('click', () => {
-    const project = db.projects.find(p => p.id === currentProjectId);
-    if (!project) return;
-
-    const newChar = {
-        id: Date.now().toString() + Math.random(),
-        name: '新しいキャラクター',
-        description: '',
-        faction: ''
-    };
-    if (!project.characters) project.characters = [];
-    project.characters.push(newChar);
-    saveDB();
-    renderProjectCharacterEditor(project);
-
-    setTimeout(() => {
-        const newItemEl = document.querySelector(`.character-list-item[data-char-id="${newChar.id}"]`);
-        if (newItemEl) newItemEl.click();
-    }, 0);
+    characterModalContext = 'project';
+    ui.characterNameInput.value = '';
+    ui.characterDescInput.value = '';
+    ui.characterModalOverlay.style.display = 'flex';
   });
 
   document.getElementById('project-character-list-container').addEventListener('click', (e) => {
-      const listItem = e.target.closest('.character-list-item');
-      if (!listItem) return;
-
-      document.querySelectorAll('.character-list-item').forEach(item => item.classList.remove('active'));
-      listItem.classList.add('active');
-      const charId = listItem.dataset.charId;
+    const item = e.target.closest('.character-list-item');
+    if (item) {
+      const charId = item.dataset.charId;
       const project = db.projects.find(p => p.id === currentProjectId);
-      const character = project.characters.find(c => c.id === charId);
+      const character = project?.characters.find(c => c.id === charId);
       if (character) {
-          document.getElementById('edit-char-name-input').value = character.name;
-          document.getElementById('edit-char-faction-input').value = character.faction || '';
-          document.getElementById('edit-char-desc-input').value = character.description;
-          document.getElementById('project-character-detail-area').style.display = 'block';
+        document.querySelectorAll('.character-list-item.active').forEach(el => el.classList.remove('active'));
+        item.classList.add('active');
+
+        const detailArea = document.getElementById('project-character-detail-area');
+        detailArea.style.display = 'block';
+        detailArea.dataset.editingCharId = charId;
+
+        document.getElementById('edit-char-name-input').value = character.name || '';
+        document.getElementById('edit-char-faction-input').value = character.faction || '';
+        document.getElementById('edit-char-desc-input').value = character.description || '';
       }
+    }
   });
 
-  // Title Editing
-  ui.editProjectTitleBtn.addEventListener('click', () => {
+  // Auto-save for character details in project settings
+  ['edit-char-name-input', 'edit-char-faction-input', 'edit-char-desc-input'].forEach(id => {
+    document.getElementById(id).addEventListener('input', (e) => {
+      const detailArea = document.getElementById('project-character-detail-area');
+      const charId = detailArea.dataset.editingCharId;
       const project = db.projects.find(p => p.id === currentProjectId);
-      if (!project) return;
-      const newTitle = prompt("新しいプロジェクトタイトルを入力してください:", project.title);
-      if (newTitle && newTitle.trim() !== project.title) {
-          project.title = newTitle.trim();
-          project.lastUpdated = new Date().toISOString();
-          saveDB();
-          ui.projectTitleEl.textContent = project.title;
-          renderProjectList();
+      const character = project?.characters.find(c => c.id === charId);
+      if (character) {
+        if (e.target.id === 'edit-char-name-input') character.name = e.target.value;
+        if (e.target.id === 'edit-char-faction-input') character.faction = e.target.value;
+        if (e.target.id === 'edit-char-desc-input') character.description = e.target.value;
+        saveDB();
+        renderProjectCharacterEditor(project); // Re-render list to reflect changes
+        // Keep selection
+        const newItem = document.querySelector(`.character-list-item[data-char-id="${charId}"]`);
+        if (newItem) newItem.classList.add('active');
       }
+    });
   });
 
+  document.getElementById('delete-char-btn').addEventListener('click', (e) => {
+    const charId = document.getElementById('project-character-detail-area').dataset.editingCharId;
+    deleteCharacter(charId);
+  });
+
+  // --- Editor Page ---
+
+  // Edit Episode Title
   ui.editEpisodeTitleBtn.addEventListener('click', () => {
-      const project = db.projects.find(p => p.id === currentProjectId);
-      const episode = project?.episodes.find(e => e.id === currentEpisodeId);
-      if (!episode) return;
-      const newTitle = prompt("新しいエピソード名を入力してください:", episode.title);
-      if (newTitle && newTitle.trim() !== episode.title) {
-          episode.title = newTitle.trim();
-          project.lastUpdated = new Date().toISOString();
-          saveDB();
-          ui.episodeTitleEl.textContent = episode.title;
-          renderProjectDetail();
-      }
+    const project = db.projects.find(p => p.id === currentProjectId);
+    const episode = project?.episodes.find(e => e.id === currentEpisodeId);
+    if (!episode) return;
+    const newTitle = prompt('新しいエピソードタイトルを入力してください:', episode.title);
+    if (newTitle && newTitle !== episode.title) {
+      episode.title = newTitle;
+      saveDB();
+      renderEpisodeEditor();
+    }
   });
 
-  // Novel Viewer
-  document.getElementById('novel-viewer').addEventListener('scroll', handleNovelScroll);
-  ui.nextEpisodeBtn.addEventListener('click', () => {
-      const project = db.projects.find(p => p.id === currentProjectId);
-      if (!project) return;
-      const currentEpisodeIndex = project.episodes.findIndex(e => e.id === currentViewingEpisodeId);
-      if (currentEpisodeIndex !== -1 && currentEpisodeIndex < project.episodes.length - 1) {
-          const nextEpisode = project.episodes[currentEpisodeIndex + 1];
-          openNovelViewer(nextEpisode.id);
-      } else {
-          ui.nextEpisodeBtn.style.display = 'none';
-      }
-  });
-  ui.closeNovelViewerBtn.addEventListener('click', () => {
-    ui.novelViewerOverlay.style.display = 'none';
+  // Header Menu Popover
+  ui.headerMenuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    ui.headerMenuPopover.style.display = ui.headerMenuPopover.style.display === 'block' ? 'none' : 'block';
   });
 
-  // Viewer Selection Modal
-  ui.viewerSelectionContent.addEventListener('click', (e) => {
-      const item = e.target.closest('.viewer-selection-list-item');
-      if (!item) return;
-      if (item.dataset.projectId) {
-          renderViewerEpisodeList(item.dataset.projectId);
-      } else if (item.dataset.episodeId) {
-          currentProjectId = viewerSelectionProjectId;
-          openNovelViewer(item.dataset.episodeId);
-      }
-  });
-  ui.viewerSelectionBackBtn.addEventListener('click', renderViewerProjectList);
-  ui.closeViewerSelectionBtn.addEventListener('click', () => {
-    ui.viewerSelectionModalOverlay.style.display = 'none';
-  });
-  ui.viewerSelectionModalOverlay.addEventListener('click', (e) => {
-    if (e.target === ui.viewerSelectionModalOverlay) ui.viewerSelectionModalOverlay.style.display = 'none';
-  });
-
-  // Character Management
-  ui.characterListPopover.addEventListener('change', (e) => {
-      if (e.target.type === 'checkbox') {
-          const charName = e.target.dataset.name;
-          updateActiveCharacters(charName, e.target.checked);
-      }
-  });
-  ui.addCharacterBtn.addEventListener('click', () => {
-      ui.headerMenuPopover.style.display = 'none';
-      characterModalContext = 'episode';
-      ui.characterNameInput.value = '';
-      ui.characterDescInput.value = '';
-      ui.characterModalOverlay.style.display = 'flex';
-      ui.characterNameInput.focus();
-  });
-  ui.manageCharactersBtn.addEventListener('click', (e) => {
-      ui.headerMenuPopover.style.display = 'none';
-      const project = db.projects.find(p => p.id === currentProjectId);
-      const episode = project?.episodes.find(e => e.id === currentEpisodeId);
-      if (!project || !episode) return;
-      renderCharacterList(project, episode);
-      ui.characterManagementModalOverlay.style.display = 'flex';
+  // Character Management Modal
+  ui.manageCharactersBtn.addEventListener('click', () => {
+    ui.characterManagementModalOverlay.style.display = 'flex';
+    ui.headerMenuPopover.style.display = 'none';
   });
   ui.closeCharacterManagementBtn.addEventListener('click', () => ui.characterManagementModalOverlay.style.display = 'none');
+  ui.characterListPopover.addEventListener('change', (e) => {
+    if (e.target.type === 'checkbox') {
+      updateActiveCharacters(e.target.dataset.name, e.target.checked);
+    }
+  });
+
+  // Add Character Modal
+  ui.addCharacterBtn.addEventListener('click', () => {
+    characterModalContext = 'episode';
+    ui.characterNameInput.value = '';
+    ui.characterDescInput.value = '';
+    ui.characterModalOverlay.style.display = 'flex';
+    ui.headerMenuPopover.style.display = 'none';
+  });
+  ui.closeCharacterBtn.addEventListener('click', closeCharacterModal);
+  ui.saveCharacterBtn.addEventListener('click', () => {
+    const name = ui.characterNameInput.value.trim();
+    const desc = ui.characterDescInput.value.trim();
+    const faction = document.getElementById('character-faction-input').value.trim();
+
+    if (!name) {
+      alert('キャラクター名を入力してください。');
+      return;
+    }
+
+    const project = db.projects.find(p => p.id === currentProjectId);
+    if (!project) return;
+
+    if (!project.characters) project.characters = [];
+    project.characters.push({ id: Date.now().toString(), name, description: desc, faction });
+    saveDB();
+
+    if (characterModalContext === 'project') {
+      renderProjectCharacterEditor(project);
+    } else {
+      const episode = project.episodes.find(e => e.id === currentEpisodeId);
+      renderCharacterList(project, episode);
+    }
+    closeCharacterModal();
+  });
 
   // AI Settings Modal
   ui.aiSettingsBtn.addEventListener('click', () => {
-      ui.headerMenuPopover.style.display = 'none';
-      const project = db.projects.find(p => p.id === currentProjectId);
-      if (!project) return;
-      if (!project.ai_settings) project.ai_settings = { perspective: 'third' };
-      if (!project.protagonist) project.protagonist = { desc: '', pronoun: '' };
-      updatePerspectiveButtons(project.ai_settings.perspective);
-      ui.aiSettingsModalOverlay.style.display = 'flex';
+    const project = db.projects.find(p => p.id === currentProjectId);
+    if (project) {
+      updatePerspectiveButtons(project.ai_settings?.perspective || 'third');
+    }
+    ui.aiSettingsModalOverlay.style.display = 'flex';
+    ui.headerMenuPopover.style.display = 'none';
   });
+  ui.closeAiSettingsBtn.addEventListener('click', () => ui.aiSettingsModalOverlay.style.display = 'none');
   ui.perspectiveButtons.addEventListener('click', (e) => {
-      if (e.target.classList.contains('perspective-btn')) {
-          const newPerspective = e.target.dataset.perspective;
-          updatePerspectiveButtons(newPerspective);
-      }
+    if (e.target.classList.contains('perspective-btn')) {
+      updatePerspectiveButtons(e.target.dataset.perspective);
+    }
   });
   ui.saveAiSettingsBtn.addEventListener('click', () => {
-      const project = db.projects.find(p => p.id === currentProjectId);
-      if (!project) return;
-      const activeButton = ui.perspectiveButtons.querySelector('.perspective-btn.active');
-      if (activeButton) {
-          project.ai_settings.perspective = activeButton.dataset.perspective;
-      }
+    const project = db.projects.find(p => p.id === currentProjectId);
+    const activeBtn = ui.perspectiveButtons.querySelector('.perspective-btn.active');
+    if (project && activeBtn) {
+      if (!project.ai_settings) project.ai_settings = {};
+      project.ai_settings.perspective = activeBtn.dataset.perspective;
       saveDB();
       ui.aiSettingsModalOverlay.style.display = 'none';
-      alert('AI設定を保存しました。');
-  });
-  ui.closeAiSettingsBtn.addEventListener('click', () => {
-    ui.aiSettingsModalOverlay.style.display = 'none';
+    }
   });
 
-  // Character Modal
-  ui.closeCharacterBtn.addEventListener('click', closeCharacterModal);
-  ui.saveCharacterBtn.addEventListener('click', () => {
-      const charName = ui.characterNameInput.value.trim();
-      const charDesc = ui.characterDescInput.value.trim();
-      if (!charName || !charDesc) {
-          alert('キャラクター名と説明の両方を入力してください。');
-          return;
+  // --- Episode Completion ---
+  ui.completeEpisodeBtn.addEventListener('click', async () => {
+    const project = db.projects.find(p => p.id === currentProjectId);
+    const episode = project?.episodes.find(e => e.id === currentEpisodeId);
+    if (!episode) return;
+
+    if (confirm(`「${episode.title}」を完了しますか？\n完了するとAIがこのエピソードのあらすじを生成します。`)) {
+      const loadingText = document.getElementById('loading-text');
+      if (loadingText) {
+        loadingText.textContent = 'AIがあらすじを生成中です...';
       }
-      const project = db.projects.find(p => p.id === currentProjectId);
-      if (!project) return;
+      ui.globalLoadingOverlay.style.display = 'flex';
 
-      const newChar = {
-          id: Date.now().toString() + Math.random(),
-          name: charName,
-          description: charDesc,
-          faction: ''
-      };
-      if (!project.characters) project.characters = [];
-      project.characters.push(newChar);
-
-      if (ui.settingsModalOverlay.style.display === 'flex') renderProjectCharacterEditor(project);
-
+      const summary = await generateEpisodeSummary(project, episode);
+      episode.summary = summary;
       saveDB();
-      closeCharacterModal();
+
+      ui.globalLoadingOverlay.style.display = 'none';
+      alert('エピソードを完了し、あらすじを保存しました。');
+    }
   });
 
-  // Popover/Menu Toggles
-  document.addEventListener('click', (e) => {
-      if (ui.headerMenuPopover && !ui.headerMenuPopover.contains(e.target) && !ui.headerMenuBtn.contains(e.target)) {
-          ui.headerMenuPopover.style.display = 'none';
-      }
-      if (ui.footerMenuContainer && !ui.footerMenuContainer.contains(e.target)) {
-          ui.footerMenuOptions.style.display = 'none';
-      }
-      if (ui.inputModeContainer && !ui.inputModeContainer.contains(e.target)) {
-          ui.inputModeOptions.style.display = 'none';
-      }
-  });
-  ui.headerMenuBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isVisible = ui.headerMenuPopover.style.display === 'block';
-      ui.headerMenuPopover.style.display = isVisible ? 'none' : 'block';
-  });
-  ui.mainFooterMenuBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isVisible = ui.footerMenuOptions.style.display === 'flex';
-      ui.footerMenuOptions.style.display = isVisible ? 'none' : 'flex';
-  });
-
-  // Input Bar
-  ui.mainInputModeBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isVisible = ui.inputModeOptions.style.display === 'flex';
-      ui.inputModeOptions.style.display = isVisible ? 'none' : 'flex';
-  });
-  ui.inputModeOptions.addEventListener('click', (e) => {
-      const button = e.target.closest('.input-mode-btn');
-      if (button) {
-          currentInputMode = button.dataset.mode;
-          const newIcon = button.querySelector('.material-symbols-outlined').textContent;
-          ui.mainInputModeBtn.querySelector('.material-symbols-outlined').textContent = newIcon;
-          ui.inputModeOptions.style.display = 'none';
-      }
-  });
-  ui.lengthControlSlider.addEventListener('input', () => {
-      ui.lengthValueDisplay.textContent = ui.lengthControlSlider.value;
-  });
-  ui.playerInputEl.addEventListener('input', autoResizeTextarea);
+  // AI Generate Button
   ui.aiGenerateBtn.addEventListener('click', () => handlePlayerInput(true));
+
+  // Send Only Button
   ui.sendOnlyBtn.addEventListener('click', () => handlePlayerInput(false));
 
-  // Chat Container Interactions
-  ui.chatContainer.addEventListener('change', (e) => {
-      if (e.target.classList.contains('input-type-dropdown')) {
-          const turnId = e.target.dataset.turnId;
-          const newType = e.target.value;
-          const project = db.projects.find(p => p.id === currentProjectId);
-          const episode = project?.episodes.find(e => e.id === currentEpisodeId);
-          const turn = episode?.turns.find(t => t.id === turnId);
-          if (turn && turn.player_input) {
-              const currentType = Object.keys(turn.player_input)[0];
-              const currentValue = turn.player_input[currentType];
-              turn.player_input = { [newType]: currentValue };
-              saveDB();
-              renderEpisodeEditor();
-          }
-      }
+  // --- Footer Menu Actions ---
+  ui.importFileInput.addEventListener('change', handleImportFile);
+
+  // --- Editor Page Chat Bubble Actions ---
+  ui.chatContainer.addEventListener('click', (e) => {
+    const editBtn = e.target.closest('.bubble-edit-btn');
+    const deleteBtn = e.target.closest('.bubble-delete-btn');
+    const regenerateBtn = e.target.closest('.bubble-regenerate-btn');
+    const addBubbleBtn = e.target.closest('.add-bubble-btn');
+
+    if (editBtn) handleEditClick(editBtn);
+    if (deleteBtn) handleDeleteClick(deleteBtn);
+    if (regenerateBtn) handleRegenerateClick(regenerateBtn);
+    if (addBubbleBtn) showInsertionMenu(addBubbleBtn);
   });
-  ui.chatContainer.addEventListener('click', async (e) => {
-      const editBtn = e.target.closest('.bubble-edit-btn');
-      if (editBtn) {
-          handleEditClick(editBtn);
-          return;
-      }
-      const regenerateBtn = e.target.closest('.bubble-regenerate-btn');
-      if (regenerateBtn) {
-          await handleRegenerateClick(regenerateBtn);
-          return;
-      }
-      const deleteBtn = e.target.closest('.bubble-delete-btn');
-      if (deleteBtn) {
-          handleDeleteClick(deleteBtn);
-          return;
-      }
-      const addBtn = e.target.closest('.add-bubble-btn');
-      if (addBtn) {
-          showInsertionMenu(addBtn);
-      }
+
+  // --- Editor Page Footer Controls ---
+  ui.playerInputEl.addEventListener('input', autoResizeTextarea);
+
+  ui.lengthControlSlider.addEventListener('input', (e) => {
+    ui.lengthValueDisplay.textContent = e.target.value;
   });
+
+  ui.mainInputModeBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    ui.inputModeOptions.style.display = ui.inputModeOptions.style.display === 'block' ? 'none' : 'block';
+  });
+
+  ui.inputModeOptions.addEventListener('click', (e) => {
+    const button = e.target.closest('.input-mode-btn');
+    if (button) {
+      currentInputMode = button.dataset.mode;
+      ui.mainInputModeBtn.innerHTML = button.innerHTML;
+      ui.inputModeOptions.style.display = 'none';
+    }
+  });
+
+  // --- Global Click Listener for Popovers ---
+  document.addEventListener('click', (event) => { // Renamed to event for clarity
+    const target = event.target;
+    // Close header menu if click is outside
+    if (ui.headerMenuPopover.style.display === 'block' && !ui.headerMenuBtn.contains(target)) {
+      ui.headerMenuPopover.style.display = 'none';
+    }
+    // Close input mode options if click is outside
+    if (ui.inputModeOptions.style.display === 'block' && !ui.mainInputModeBtn.contains(target)) {
+      ui.inputModeOptions.style.display = 'none';
+    }
+    // Close footer settings menu if click is outside
+    document.querySelectorAll('#footer-menu-options, .footer-menu-options-clone').forEach(optionsNode => {
+      const container = optionsNode.closest('#footer-menu-container, .footer-menu-container-clone');
+      if (optionsNode.style.display === 'block' && container && !container.contains(target)) {
+        optionsNode.style.display = 'none';
+      }
+    });
+  });
+
+  // --- Footer Settings Menu ---
+  // Use event delegation on the body to handle original and cloned footer menus
+  document.body.addEventListener('click', (event) => {
+    const target = event.target;
+    const actionBtn = target.closest('.app-menu-btn[data-action]');
+
+    // Main settings button (original and clones)
+    if (target.closest('#main-footer-menu-btn') || target.closest('.main-footer-menu-btn-clone')) {
+      event.stopPropagation();
+      const menuContainer = target.closest('#footer-menu-container, .footer-menu-container-clone');
+      if (menuContainer) {
+        const options = menuContainer.querySelector('#footer-menu-options, .footer-menu-options-clone');
+        if (options) {
+          options.style.display = options.style.display === 'block' ? 'none' : 'block';
+        }
+      }
+    } else if (target.closest('#theme-toggle-btn') || target.closest('.theme-toggle-btn-clone')) {
+      const isDarkMode = !document.body.classList.contains('dark-mode');
+      localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+      applySavedTheme();
+    } else if (target.closest('#api-key-settings-btn') || target.closest('.api-key-settings-btn-clone')) {
+      const currentKey = localStorage.getItem('GG_API_KEY') || '';
+      const newKey = prompt('Gemini APIキーを入力してください:', currentKey);
+      if (newKey !== null) {
+        localStorage.setItem('GG_API_KEY', newKey);
+        alert('APIキーを保存しました。');
+      }
+    } else if (actionBtn) {
+      const action = actionBtn.dataset.action;
+      switch (action) {
+        case 'open-generator': openGeneratorModal(); break;
+        case 'open-viewer': openViewerSelectionModal(); break;
+        case 'import': ui.importFileInput.click(); break;
+      }
+    }
+  });
+
+  // --- Novel Viewer ---
+  ui.closeNovelViewerBtn.addEventListener('click', () => {
+    ui.novelViewerOverlay.style.display = 'none';
+  });
+  document.getElementById('novel-viewer').addEventListener('scroll', handleNovelScroll);
+  ui.nextEpisodeBtn.addEventListener('click', () => {
+    const project = db.projects.find(p => p.id === currentProjectId);
+    const currentEpisodeIndex = project.episodes.findIndex(e => e.id === currentViewingEpisodeId);
+    const nextEpisode = project.episodes[currentEpisodeIndex + 1];
+    if (nextEpisode) {
+      openNovelViewer(nextEpisode.id);
+    }
+  });
+
+  // --- Viewer Selection Modal ---
+  ui.closeViewerSelectionBtn.addEventListener('click', () => ui.viewerSelectionModalOverlay.style.display = 'none');
+  ui.viewerSelectionBackBtn.addEventListener('click', renderViewerProjectList);
+  ui.viewerSelectionContent.addEventListener('click', (e) => {
+    const projectItem = e.target.closest('[data-project-id]');
+    const episodeItem = e.target.closest('[data-episode-id]');
+
+    if (episodeItem) {
+      openNovelViewer(episodeItem.dataset.episodeId);
+    } else if (projectItem) {
+      currentProjectId = projectItem.dataset.projectId;
+      renderViewerEpisodeList(projectItem.dataset.projectId);
+    }
+  });
+
+  // Add other event listeners as needed...
 }

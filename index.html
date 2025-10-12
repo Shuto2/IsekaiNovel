@@ -11,13 +11,6 @@
   <link rel="stylesheet" href="css/editor.css">
   <link rel="stylesheet" href="css/viewer.css">
   <link rel="stylesheet" href="css/generator.css">
-  <style>
-    .card-meta {
-      font-size: 0.8em;
-      color: #666;
-      margin-top: -10px;
-    }
-  </style>
 </head>
 <body>
 
@@ -66,12 +59,12 @@
       <button class="app-menu-btn" data-action="open-generator"><span class="material-symbols-outlined">auto_awesome</span><span class="app-menu-label">ジェネレータ</span></button>
       <button class="app-menu-btn" data-action="open-viewer"><span class="material-symbols-outlined">menu_book</span><span class="app-menu-label">ビューアー</span></button>
       <button class="app-menu-btn" data-action="import"><span class="material-symbols-outlined">upload_file</span><span class="app-menu-label">インポート</span></button>
-      <div class="app-menu-btn"> <!-- idは重複させないため、project-list-pageのものだけにする -->
-        <div style="display: none;"> <!-- このページのメニューは機能しないため非表示 -->
-            <button class="input-mode-btn" title="テーマ切替"><span class="material-symbols-outlined">dark_mode</span></button>
-            <button class="input-mode-btn" title="APIキー設定"><span class="material-symbols-outlined">vpn_key</span></button>
+      <div class="app-menu-btn footer-menu-container-clone">
+        <div class="footer-menu-options-clone" style="display: none;">
+            <button class="input-mode-btn theme-toggle-btn-clone" title="テーマ切替"><span class="material-symbols-outlined">dark_mode</span></button>
+            <button class="input-mode-btn api-key-settings-btn-clone" title="APIキー設定"><span class="material-symbols-outlined">vpn_key</span></button>
         </div>
-        <button class="app-menu-btn" style="padding:0; margin:0;"><span class="material-symbols-outlined">settings</span><span class="app-menu-label">設定</span></button>
+        <button class="app-menu-btn main-footer-menu-btn-clone" style="padding:0; margin:0;"><span class="material-symbols-outlined">settings</span><span class="app-menu-label">設定</span></button>
       </div>
     </footer>
   </div>
@@ -153,7 +146,7 @@
           <label>プロジェクト全体の登場人物</label>
           <button id="add-project-character-btn" class="add-char-in-modal-btn"><span class="material-symbols-outlined">person_add</span>追加</button>
         </div>
-        <div id="project-character-editor" class="character-editor-container">
+        <div class="character-editor-container">
           <div id="project-character-list-container" class="character-list-column">
             <!-- Character list will be rendered here -->
           </div>
@@ -162,12 +155,13 @@
             <input type="text" id="edit-char-name-input" placeholder="キャラクター名">
             <label for="edit-char-faction-input">勢力</label>
             <div class="faction-input-wrapper">
-              <input type="text" id="edit-char-faction-input" list="faction-suggestions" placeholder="所属する勢力名 (例: 王国, ギルド)" class="has-icon">
+              <input type="text" id="edit-char-faction-input" list="faction-suggestions" placeholder="所属する勢力名 (例: 王国, ギルド)">
+              <span class="material-symbols-outlined dropdown-arrow-icon">arrow_drop_down</span>
               <datalist id="faction-suggestions"></datalist>
             </div>
             <label for="edit-char-desc-input">説明</label>
             <textarea id="edit-char-desc-input" rows="4" placeholder="キャラクター説明"></textarea>
-            <button id="delete-char-btn" class="delete-char-btn"><span class="material-symbols-outlined">delete</span>このキャラクターを削除</button>
+            <button id="delete-char-btn" class="delete-char-btn"><span class="material-symbols-outlined">delete</span>キャラクターを削除</button>
           </div>
         </div>
       </div>
@@ -182,6 +176,9 @@
       <div class="modal-content">
         <label for="character-name-input">キャラクター名</label>
         <input type="text" id="character-name-input" placeholder="例: 剣士アレク">
+
+        <label for="character-faction-input">勢力</label>
+        <input type="text" id="character-faction-input" list="faction-suggestions" placeholder="所属する勢力名 (例: 王国, ギルド)">
 
         <label for="character-desc-input">キャラクター説明</label>
         <textarea id="character-desc-input" rows="4" placeholder="例: 王国一の剣の腕を持つが、お人好しな性格。"></textarea>
@@ -363,10 +360,10 @@
 
    <!-- Modules -->
    <script src="js/state.js"></script>
-   <script src="js/api.js"></script>
    <script src="js/ui.js"></script>
+   <script src="js/api.js"></script>
+   <script src="js/generator.js"></script>
    <script src="js/events.js"></script>
    <script src="js/main.js"></script>
-   <script src="js/generator.js"></script>
 </body>
 </html>

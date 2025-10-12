@@ -1,0 +1,39 @@
+/* --- Title Screen --- */
+#title-page {
+  cursor: pointer;
+  box-sizing: border-box;
+  height: 100vh; /* 画面の高さいっぱいに広げる */
+}
+
+/* タイトルページ内のメインコンテンツ領域をFlexコンテナ化し、中身を中央揃えにする */
+#title-page .page-content {
+  display: flex;
+  height: 100%; /* 親要素(title-page)の高さいっぱいに広げる */
+  justify-content: center;
+  align-items: center;
+  /* 他のページ用のフッター余白をリセットして、垂直中央揃えを正しく機能させる */
+  padding-bottom: 0;
+}
+
+.title-screen-content {
+  text-align: center;
+}
+
+.app-title {
+  font-size: 2.2em;
+  margin-bottom: 20px; /* 下のテキストとの間隔を調整 */
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.tap-to-start {
+  font-size: 1.2em;
+  color: var(--secondary-text-color);
+  animation: blink-animation 1.8s infinite;
+}
+
+@media (max-width: 600px) {
+  .app-title {
+    font-size: 1.8em;
+  }
+}

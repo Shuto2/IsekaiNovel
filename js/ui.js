@@ -452,7 +452,12 @@ function countEpisodeCharacters(episode) {
 }
 
 function updateThemeIcon(isDarkMode) {
-    ui.themeToggleBtn.querySelector('.material-symbols-outlined').textContent = isDarkMode ? 'light_mode' : 'dark_mode';
+    document.querySelectorAll('#theme-toggle-btn, .theme-toggle-btn-clone').forEach(btn => {
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (icon) {
+            icon.textContent = isDarkMode ? 'light_mode' : 'dark_mode';
+        }
+    });
 }
 
 function applySavedTheme() {
@@ -644,6 +649,7 @@ function updatePerspectiveButtons(activePerspective) {
 
 function closeCharacterModal() {
     ui.characterModalOverlay.style.display = 'none';
+    document.getElementById('character-faction-input').value = ''; // 勢力入力欄もリセット
 }
 
 function autoResizeTextarea() {

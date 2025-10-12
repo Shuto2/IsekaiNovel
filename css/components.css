@@ -164,6 +164,22 @@
   font-size: 10px;
 }
 
+/* --- Cloned Footer Menu --- */
+.footer-menu-container-clone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.footer-menu-options-clone {
+  display: flex; /* JSで制御 */
+  flex-direction: column-reverse; /* アイコンを上方向に展開 */
+  position: absolute;
+  bottom: 50px; /* main button height + gap */
+  gap: 8px;
+}
+
 /* --- Popover --- */
 #header-menu-container {
   position: relative;
@@ -206,7 +222,7 @@
 
 .popover-list-item {
   display: flex;
-  align-items: center;
+  align-items: center; /* flexアイテムを垂直方向中央に配置 */
   padding: 8px;
   border-radius: 4px;
 }
@@ -468,4 +484,94 @@
     font-size: 1em; /* タイトルフォントを少し小さくする */
     padding: 0 5px; /* 左右の余白も少し詰める */
   }
+}
+
+/* --- Project Settings: Character Editor --- */
+.character-editor-container {
+  display: flex;
+  gap: 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 10px;
+  min-height: 250px;
+}
+
+.character-list-column {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+  border-right: 1px solid var(--border-color);
+}
+
+.character-detail-column {
+  flex: 2;
+}
+
+.character-detail-column label {
+  font-size: 0.85em;
+  font-weight: normal;
+  color: var(--secondary-text-color);
+}
+
+.character-detail-column input,
+.character-detail-column textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.95em;
+  margin-bottom: 15px; /* 各入力要素間の余白を確保 */
+}
+
+.character-faction-group h3 {
+  font-size: 0.9em;
+  color: var(--secondary-text-color);
+  margin: 15px 0 5px 0;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.character-faction-group ul,
+.character-list-column ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.character-list-item {
+  padding: 8px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.character-list-item:hover {
+  background-color: var(--bg-color);
+}
+
+.character-list-item.active {
+  background-color: var(--fab-bg-color);
+  color: var(--fab-text-color);
+  font-weight: bold;
+}
+
+.faction-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.dropdown-arrow-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 24px; /* アイコンのサイズを明示的に指定 */
+  color: var(--icon-color);
+  pointer-events: none; /* アイコン自体はクリックイベントを発生させない */
 }
