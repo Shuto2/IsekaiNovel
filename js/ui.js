@@ -544,13 +544,13 @@ function openNovelViewer(episodeId) {
     if (!episode) return;
 
     ui.viewerSelectionModalOverlay.style.display = 'none';
-    handleNovelScroll();
     const novelHtml = generateNovelFromEpisode(project, episode);
     ui.novelContent.innerHTML = novelHtml;
     ui.novelViewerOverlay.style.display = 'flex';
 
     const novelViewer = document.getElementById('novel-viewer');
     novelViewer.scrollLeft = novelViewer.scrollWidth;
+    handleNovelScroll(); // スクロール位置設定後に呼び出す
 }
 
 function handleNovelScroll() {

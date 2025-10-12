@@ -1,0 +1,49 @@
+/* 基本的なリセットと設定 */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #f0f2f5;
+  color: #1c1e21;
+}
+
+/* --- Title Screen --- */
+#title-page {
+  cursor: pointer;
+  box-sizing: border-box;
+  height: 100vh; /* 画面の高さいっぱいに広げる */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.title-screen-content {
+  text-align: center;
+}
+
+.app-title {
+  font-size: 2.2em;
+  margin-bottom: 20px; /* 下のテキストとの間隔を調整 */
+  font-weight: bold;
+  color: #1c1e21;
+}
+
+.tap-to-start {
+  font-size: 1.2em;
+  color: #606770;
+  animation: blink-animation 1.8s infinite;
+}
+
+/* 点滅アニメーション */
+@keyframes blink-animation {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* スマートフォン向けのレスポンシブ対応 */
+@media (max-width: 600px) {
+  .app-title {
+    font-size: 1.8em;
+  }
+}

@@ -85,23 +85,46 @@ function initializeEventListeners() {
 
   // New Episode Button
   ui.newEpisodeBtn.addEventListener('click', () => {
-    const title = prompt('新しいエピソードのタイトルを入力してください:', '無題のエピソード');
+    const project = db.projects.find(p => p.id === currentProjectId);
+    if (!project) return;
+
+    const title = prompt("新しいエピソードのタイトルを入力してください:", `エピソード ${project.episodes.length + 1}`);
     if (title) {
-      const project = db.projects.find(p => p.id === currentProjectId);
-      if (project) {
-        const newEpisode = {
-          id: Date.now().toString(),
-          title: title,
-          turns: [],
-          activeCharacters: [],
-          summary: '',
-          initial_ai_question: '物語はどこから始まりますか？'
-        };
-        if (!project.episodes) project.episodes = [];
-        project.episodes.push(newEpisode);
-        saveDB();
-        renderProjectDetail();
+      let initialActiveCharacters = [];
+      if (project.episodes.length > 0) {
+        const lastEpisode = project.episodes[project.episodes.length - 1];
+        if (lastEpisode.activeCharacters) {
+          initialActiveCharacters = [...lastEpisode.activeCharacters];
+        }
       }
+      const newEpisode = {
+        id: Date.now().toString(),
+        title: title,
+        characters: '', // 旧仕様との互換性のため残す
+        activeCharacters: initialActiveCharacters,
+        initial_ai_question: project.episodes.length === 0 ? '異世界転生する前の話を入れますか？入れるとすれば設定を教えてください。' : null,
+        turns: [],
+        summary: ''
+      };
+
+      if (project.episodes.length > 0) {
+        const lastEpisode = project.episodes[project.episodes.length - 1];
+        if (lastEpisode.turns && lastEpisode.turns.length > 0) {
+          const lastTurn = lastEpisode.turns[lastEpisode.turns.length - 1];
+          if (lastTurn.player_input && 'system' in lastTurn.player_input && !lastTurn.ai_output) {
+            const turnToMove = lastEpisode.turns.pop();
+            newEpisode.turns.push(turnToMove);
+            newEpisode.initial_ai_question = null;
+          } else if (lastTurn.ai_output && lastTurn.ai_output.system_question) {
+            newEpisode.initial_ai_question = lastTurn.ai_output.system_question;
+          }
+        }
+      }
+
+      project.episodes.push(newEpisode);
+      project.lastUpdated = new Date().toISOString();
+      saveDB();
+      renderProjectDetail();
     }
   });
 
@@ -143,11 +166,13 @@ function initializeEventListeners() {
   ui.editProjectTitleBtn.addEventListener('click', () => {
     const project = db.projects.find(p => p.id === currentProjectId);
     if (!project) return;
-    const newTitle = prompt('新しいプロジェクトタイトルを入力してください:', project.title);
-    if (newTitle && newTitle !== project.title) {
-      project.title = newTitle;
+    const newTitle = prompt('新しいプロジェクトタイトルを入力してください:', project.title.trim());
+    if (newTitle && newTitle.trim() !== project.title) {
+      project.title = newTitle.trim();
+      project.lastUpdated = new Date().toISOString();
       saveDB();
-      renderProjectDetail();
+      ui.projectTitleEl.textContent = project.title; // 画面上のタイトルを直接更新
+      renderProjectList(); // 一覧にも変更を反映
     }
   });
 
@@ -235,11 +260,13 @@ function initializeEventListeners() {
     const project = db.projects.find(p => p.id === currentProjectId);
     const episode = project?.episodes.find(e => e.id === currentEpisodeId);
     if (!episode) return;
-    const newTitle = prompt('新しいエピソードタイトルを入力してください:', episode.title);
-    if (newTitle && newTitle !== episode.title) {
-      episode.title = newTitle;
+    const newTitle = prompt('新しいエピソード名を入力してください:', episode.title);
+    if (newTitle && newTitle.trim() !== episode.title) {
+      episode.title = newTitle.trim();
+      project.lastUpdated = new Date().toISOString();
       saveDB();
-      renderEpisodeEditor();
+      renderEpisodeEditor(); // 編集画面のタイトルを更新
+      renderProjectDetail(); // 詳細画面（エピソード一覧）も更新しておく
     }
   });
 
