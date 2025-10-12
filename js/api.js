@@ -34,51 +34,49 @@ function getLocalApiKey() {
 
 // Gemini API呼び出し
 async function callGemini(prompt) {
+  // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+  // ここに、AWS API Gatewayで作成したAPIエンドポイントのURLを貼り付けてください
+  const LAMBDA_ENDPOINT_URL = 'YOUR_LAMBDA_ENDPOINT_URL_HERE';
+  // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+
   const apiKey = getLocalApiKey();
   if (!apiKey) {
     const msg = '認証情報がありません。';
     console.error(msg, 'トップページの鍵アイコンからAPIキーを設定してください。');
     alert('APIキーが設定されていません。\nトップページの鍵アイコンから設定してください。');
-    return `{ "narration": "生成に失敗しました: ${msg}", "character_reactions": [] }`;
+    // Gemini APIのレスポンス形式に合わせてエラーを返す
+    return JSON.stringify({ candidates: [{ content: { parts: [{ text: `{ "narration": "生成に失敗しました: ${msg}", "character_reactions": [] }` }] } }] });
   }
 
-  const endpointBase = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
-  const endpoint = `${endpointBase}?key=${apiKey}`;
-
-  const headers = { 'Content-Type': 'application/json' };
+  if (LAMBDA_ENDPOINT_URL === 'YOUR_LAMBDA_ENDPOINT_URL_HERE') {
+    alert('LambdaのエンドポイントURLが設定されていません。js/api.jsファイルを修正してください。');
+    return JSON.stringify({ candidates: [{ content: { parts: [{ text: `{ "narration": "生成に失敗しました: Lambdaエンドポイント未設定", "character_reactions": [] }` }] } }] });
+  }
 
   try {
-    const res = await fetch(endpoint, {
+    const res = await fetch(LAMBDA_ENDPOINT_URL, {
       method: 'POST',
-      headers,
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }],
-            role: 'user',
-          },
-        ],
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, apiKey }), // promptとapiKeyをLambdaに渡す
     });
 
     if (!res.ok) {
       let errText = `APIエラー: ${res.status}`;
       try {
         const errJson = await res.json();
-        errText += `: ${errJson.error?.message || JSON.stringify(errJson)}`;
+        errText += `: ${errJson.error?.message || errJson.error || JSON.stringify(errJson)}`; // Lambdaからのエラーメッセージを取得
       } catch (e) {
-        const txt = await res.text();
-        if (txt) errText += `: ${txt}`;
+        errText += `: ${await res.text()}`;
       }
       console.error('Gemini API error:', errText);
-      return `{ "narration": "API呼び出しに失敗しました: ${errText}", "character_reactions": [] }`;
+      return JSON.stringify({ candidates: [{ content: { parts: [{ text: `{ "narration": "API呼び出しに失敗しました: ${errText}", "character_reactions": [] }` }] } }] });
     }
 
     const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '{}'; // LambdaからのレスポンスはGeminiのレスポンスと同じ形式
   } catch (e) {
     console.error(e);
-    return `{ "narration": "生成エラーが発生しました: ${e.message}", "character_reactions": [] }`;
+    return JSON.stringify({ candidates: [{ content: { parts: [{ text: `{ "narration": "生成エラーが発生しました: ${e.message}", "character_reactions": [] }` }] } }] });
   }
 }
 
