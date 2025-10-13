@@ -1,7 +1,7 @@
 // Node.js v18以降のランタイムを想定しています。
 const ALLOWED_ORIGIN = '*';
 
-export const handler = async (event) => {
+exports.handler = async (event) => {
     const headers = {
         'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
         'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
@@ -37,12 +37,6 @@ export const handler = async (event) => {
 
         const { prompt } = body;
         const apiKey = process.env.GEMINI_API_KEY; // 環境変数からAPIキーを取得
-
-        // --- デバッグ用コード ---
-        // 環境変数が読み込めているかを確認するため、APIキーの有無を返す
-        const debugMessage = `環境変数 GEMINI_API_KEY は ${apiKey ? '設定されています。' : '設定されていません。'}`;
-        return { statusCode: 418, headers, body: JSON.stringify({ error: debugMessage }) };
-        // --- デバッグここまで ---
 
         if (!prompt) {
             return { statusCode: 400, headers, body: JSON.stringify({ error: `必須パラメータが不足しています: prompt` }) };
