@@ -60,6 +60,10 @@ async function callGemini(prompt) {
       body: JSON.stringify({ prompt, apiKey }), // promptとapiKeyをLambdaに渡す
       credentials: 'omit' // <- これを必ず指定
 });
+
+const text = await res.text();
+alert("Status: " + res.status + "\nResponse:\n" + text);
+      
     if (!res.ok) {
       let errText = `APIエラー: ${res.status}`;
       try {
