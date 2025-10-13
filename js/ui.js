@@ -931,7 +931,7 @@ async function handlePlayerInput(shouldTriggerAi = false) {
             if (lastTurn && !lastTurn.ai_output) {
                 turnForAi = lastTurn;
             } else {
-                const newTurn = { id: Date.now().toString(), player_input: null, ai_output: null, timestamp: new Date().toISOString() };
+                const newTurn = { id: Date.now().toString(), player_input: {}, ai_output: null, timestamp: new Date().toISOString() };
                 episode.turns.push(newTurn);
                 turnForAi = newTurn;
                 saveDB();
