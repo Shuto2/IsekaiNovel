@@ -33,22 +33,21 @@ async function callGemini(prompt) {
     console.log("Lambda response text:", text);
 
     if (!res.ok) {
-      // Lambdaからのエラーメッセージをそのまま表示
       let parsed;
       try { parsed = JSON.parse(text); } catch (e) { parsed = text; }
       console.error("Lambda HTTP error:", res.status, parsed);
-      // Lambdaからのエラーメッセージを整形して返す
-      const errorMessage = parsed.error || `API呼び出し失敗: ${res.status}`;
+      // Lambdaからのエラーメッセージをnarrationに設定
+      const errorMessage = parsed.error || (typeof parsed === 'string' ? parsed : `API呼び出し失敗: ${res.status}`);
       return `{ "narration": "${errorMessage}", "character_reactions": [] }`;
     }
 
-    // Lambdaからのレスポンスボディは、すでにGeminiのレスポンス(JSON文字列)になっているはず
-    const data = JSON.parse(text);
-    // Geminiのレスポンスから、本文のテキスト部分を抽出して返す
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    // Lambdaからのレスポンスボディは、フロントエンドが期待するJSON文字列そのもの
+    // そのまま返せば良い
+    return text || '{}';
+
   } catch (e) {
     console.error("Fetch error:", e);
-    const errorMessage = `生成エラーが発生しました: ${e.message}`;
+    const errorMessage = `APIへの接続に失敗しました: ${e.message}`;
     return `{ "narration": "${errorMessage}", "character_reactions": [] }`;
   }
 }

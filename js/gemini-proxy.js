@@ -47,27 +47,46 @@ export const handler = async (event) => {
 
         const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
-        const response = await fetch(geminiEndpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }], role: 'user' }] }),
-        });
+        let response;
+        try {
+            response = await fetch(geminiEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }], role: 'user' }] }),
+            });
+        } catch (fetchError) {
+            console.error('Gemini API Fetch Error:', fetchError);
+            return {
+                statusCode: 502, // Bad Gateway
+                headers,
+                body: JSON.stringify({ error: 'Gemini APIへの接続に失敗しました。' }),
+            };
+        }
 
-        const responseBody = await response.json(); // JSONとして解析
+        const responseText = await response.text();
+        let responseBody;
 
         if (!response.ok) {
-            console.error('Gemini API Error:', { status: response.status, body: responseBody });
+            console.error('Gemini API Error:', { status: response.status, body: responseText });
+            try {
+                responseBody = JSON.parse(responseText);
+            } catch (e) {
+                responseBody = { error: { message: responseText || '不明なAPIエラー' } };
+            }
             return {
                 statusCode: response.status,
                 headers,
-                body: JSON.stringify(responseBody), // Geminiからのエラーをそのまま返す
+                body: JSON.stringify({ error: `Gemini APIエラー: ${responseBody.error?.message || '詳細不明'}` }),
             };
         }
+
+        responseBody = JSON.parse(responseText);
+        const content = responseBody.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
 
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify(responseBody), // Geminiからの成功レスポンスをそのまま返す
+            body: content, // フロントエンドが欲しいJSON文字列だけを返す
         };
 
     } catch (error) {
