@@ -111,16 +111,18 @@ async function generateAiResponse(project, episode, turn) {
         return turnText.trim() ? turnText : null;
     }).filter(Boolean).join('\n\n---\n\n');
 
-    let currentPlayerInput = '（プレイヤーからの具体的な入力はありません。物語を自然に進めてください）';
-    if (turn.player_input && Object.keys(turn.player_input).length > 0) {
-        currentPlayerInput = Object.entries(turn.player_input).map(([key, value]) => {
-            if (key === 'speech') return `[発言] 「${value}」`;
-            if (key === 'thought') return `[心の声] (${value})`;
-            if (key === 'system') return `【System】 ${value}`;
-            if (key === 'action') return `[行動] ${value}`;
-            return `[${key}] ${value}`;
-        }).join('\n');
-    }
+    const currentPlayerInput = (() => {
+        if (!turn.player_input || Object.keys(turn.player_input).length === 0) {
+            return '（プレイヤーからの具体的な入力はありません。物語を自然に進めてください）';
+        }
+        return Object.entries(turn.player_input).map(([key, value]) => {
+                if (key === 'speech') return `[発言] 「${value}」`;
+                if (key === 'thought') return `[心の声] (${value})`;
+                if (key === 'system') return `【System】 ${value}`;
+                if (key === 'action') return `[行動] ${value}`;
+                return `[${key}] ${value}`;
+            }).join('\n');
+    })();
 
 
     const perspectiveSetting = project.ai_settings?.perspective || 'third';
