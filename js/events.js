@@ -19,8 +19,13 @@ function initializeEventListeners() {
   // Footer menu buttons
   document.querySelectorAll('.app-menu-btn[data-target]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const targetPageId = btn.dataset.target.replace('-page', ''); // 'project-list-page' -> 'projectList'
-      showPage(targetPageId);
+      const targetPageElementId = btn.dataset.target;
+      const targetPage = document.getElementById(targetPageElementId);
+      // 現在表示されているページと同じボタンが押された場合は何もしない
+      if (targetPage && targetPage.style.display === 'block') {
+        return;
+      }
+      showPage(targetPageElementId.replace('-page', ''));
     });
   });
 
