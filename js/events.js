@@ -372,7 +372,15 @@ function initializeEventListeners() {
   });
 
   // AI Generate Button
-  ui.aiGenerateBtn.addEventListener('click', () => handlePlayerInput(true));
+  ui.aiGenerateBtn.addEventListener('click', () => {
+    const playerText = ui.playerInputEl.value.trim();
+    if (playerText === '') {
+      // プレイヤーの入力が空の場合、AIに続きを促す特別な入力を渡す
+      handlePlayerInput(true, '物語の続きを生成してください。');
+    } else {
+      handlePlayerInput(true);
+    }
+  });
 
   // Send Only Button
   ui.sendOnlyBtn.addEventListener('click', () => handlePlayerInput(false));
