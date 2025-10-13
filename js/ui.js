@@ -941,6 +941,11 @@ async function handlePlayerInput(shouldTriggerAi = false) {
 
         // 3. AI生成を実行
         if (shouldTriggerAi && turnForAi && !turnForAi.ai_output) {
+            // AI生成前に、対象ターンのplayer_inputがnull/undefinedでないことを保証する
+            if (!turnForAi.player_input) {
+                turnForAi.player_input = {};
+            }
+
             const loadingText = document.getElementById('loading-text');
             if (loadingText) loadingText.textContent = 'AIが物語を生成中です...';
             ui.playerInputEl.disabled = true;
