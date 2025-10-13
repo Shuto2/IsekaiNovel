@@ -38,11 +38,18 @@ export const handler = async (event) => {
         const { prompt } = body;
         const apiKey = process.env.GEMINI_API_KEY; // 環境変数からAPIキーを取得
 
+        // --- デバッグ用コード ---
+        // 環境変数が読み込めているかを確認するため、APIキーの有無を返す
+        const debugMessage = `環境変数 GEMINI_API_KEY は ${apiKey ? '設定されています。' : '設定されていません。'}`;
+        return { statusCode: 418, headers, body: JSON.stringify({ error: debugMessage }) };
+        // --- デバッグここまで ---
+
         if (!prompt) {
             return { statusCode: 400, headers, body: JSON.stringify({ error: `必須パラメータが不足しています: prompt` }) };
         }
         if (!apiKey) {
-            return { statusCode: 500, headers, body: JSON.stringify({ error: 'サーバー側でAPIキーが設定されていません。' }) };
+            // このメッセージはフロントエンドで "Server misconfiguration: missing API key" と表示される原因かもしれません
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'Server misconfiguration: missing API key' }) };
         }
 
         const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
