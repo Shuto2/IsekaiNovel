@@ -592,6 +592,7 @@
   padding: 4px 8px;
   font-size: 0.85em;
   cursor: pointer;
+  color: var(--text-color); /* テキスト色をテーマに合わせて設定 */
 }
 
 #add-project-character-btn .material-symbols-outlined {
