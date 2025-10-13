@@ -594,6 +594,10 @@
   cursor: pointer;
 }
 
+#add-project-character-btn .material-symbols-outlined {
+  vertical-align: middle;
+}
+
 #delete-char-btn {
   background-color: transparent;
   border: 1px solid #dc3545;
@@ -605,4 +609,8 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
+}
+
+#delete-char-btn .material-symbols-outlined {
+  vertical-align: middle;
 }
