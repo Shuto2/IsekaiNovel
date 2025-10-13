@@ -921,8 +921,9 @@ async function handlePlayerInput(shouldTriggerAi) {
         ui.playerInputEl.value = '';
         autoResizeTextarea();
         ui.playerInputEl.focus();
-    } else {
-        turnForAi = episode.turns.length > 0 ? episode.turns[episode.turns.length - 1] : null;
+        } else if (shouldTriggerAi) { // 入力が空でAI生成ボタンが押された場合
+        // 最後のターンが存在し、まだAIの応答がなければ、それをAI生成の対象とする
+        turnForAi = episode.turns.length > 0 && !episode.turns[episode.turns.length - 1].ai_output ? episode.turns[episode.turns.length - 1] : null;
     }
 
     if (shouldTriggerAi) {
