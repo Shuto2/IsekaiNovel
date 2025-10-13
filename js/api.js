@@ -1,111 +1,77 @@
-// --- Utility Functions ---
+// ======================================================
+// api.js — Gemini呼び出し（Lambda経由、安全版）
+// ======================================================
+
+// --- Utility: AI出力からJSONを安全に抽出 ---
 function extractJsonFromString(text) {
-    if (!text) return null;
+  if (!text) return null;
 
-    const markdownMatch = text.match(/```(json)?\s*([\s\S]*?)\s*```/);
-    if (markdownMatch && markdownMatch[2]) {
-        return markdownMatch[2].trim();
-    }
+  const markdownMatch = text.match(/```(json)?\\s*([\\s\\S]*?)\\s*```/);
+  if (markdownMatch && markdownMatch[2]) return markdownMatch[2].trim();
 
-    const firstBrace = text.indexOf('{');
-    const lastBrace = text.lastIndexOf('}');
-
-    if (firstBrace !== -1 && lastBrace > firstBrace) {
-        return text.substring(firstBrace, lastBrace + 1).trim();
-    }
-
-    return text;
-}
-
-// --- Core Functions (API Calls) ---
-
-function getLocalApiKey() {
-  let storedKey = null;
-  try {
-    storedKey = localStorage.getItem('GG_API_KEY');
-  } catch (e) { /* ignore */ }
-
-  if (storedKey) {
-    return storedKey;
+  const firstBrace = text.indexOf('{');
+  const lastBrace = text.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    return text.substring(firstBrace, lastBrace + 1).trim();
   }
 
-  return null; // キーがなければnullを返す
+  return text;
 }
 
-// Gemini API呼び出し
+// callGemini for Pages (client-side)
 async function callGemini(prompt) {
-  // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-  // ここに、AWS API Gatewayで作成したAPIエンドポイントのURLを貼り付けてください
-  const LAMBDA_ENDPOINT_URL = 'https://0c4kgofpej.execute-api.ap-southeast-2.amazonaws.com/dev';
-  // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-
-  const apiKey = getLocalApiKey();
-  if (!apiKey) {
-    const msg = '認証情報がありません。';
-    console.error(msg, 'トップページの鍵アイコンからAPIキーを設定してください。');
-    alert('APIキーが設定されていません。\nトップページの鍵アイコンから設定してください。');
-    // Gemini APIのレスポンス形式に合わせてエラーを返す
-    return JSON.stringify({ candidates: [{ content: { parts: [{ text: `{ "narration": "生成に失敗しました: ${msg}", "character_reactions": [] }` }] } }] });
-  }
-
-  if (LAMBDA_ENDPOINT_URL === 'YOUR_LAMBDA_ENDPOINT_URL_HERE') {
-    alert('LambdaのエンドポイントURLが設定されていません。js/api.jsファイルを修正してください。');
-    return JSON.stringify({ candidates: [{ content: { parts: [{ text: `{ "narration": "生成に失敗しました: Lambdaエンドポイント未設定", "character_reactions": [] }` }] } }] });
-  }
+  const LAMBDA_ENDPOINT_URL = 'https://0c4kgofpej.execute-api.ap-southeast-2.amazonaws.com/dev'; // ← あなたのステージURL
 
   try {
     const res = await fetch(LAMBDA_ENDPOINT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, apiKey }), // promptとapiKeyをLambdaに渡す
-      credentials: 'omit' // <- これを必ず指定
-});
+      body: JSON.stringify({ prompt }),
+      credentials: 'omit'
+    });
 
-const text = await res.text();
-alert("Status: " + res.status + "\nResponse:\n" + text);
-      
+    const text = await res.text();
+    console.log("Lambda response text:", text);
+
     if (!res.ok) {
-      let errText = `APIエラー: ${res.status}`;
-      try {
-        const errJson = await res.json();
-        errText += `: ${errJson.error?.message || errJson.error || JSON.stringify(errJson)}`; // Lambdaからのエラーメッセージを取得
-      } catch (e) {
-        errText += `: ${await res.text()}`;
-      }
-      console.error('Gemini API error:', errText);
-      return JSON.stringify({ candidates: [{ content: { parts: [{ text: `{ "narration": "API呼び出しに失敗しました: ${errText}", "character_reactions": [] }` }] } }] });
+      // Lambdaからのエラーメッセージをそのまま表示
+      let parsed;
+      try { parsed = JSON.parse(text); } catch (e) { parsed = text; }
+      console.error("Lambda HTTP error:", res.status, parsed);
+      return JSON.stringify({ candidates: [{ content: { parts: [{ text: `{ "narration": "API呼び出し失敗: ${res.status}", "character_reactions": [] }` }] } }] });
     }
 
-    const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '{}'; // LambdaからのレスポンスはGeminiのレスポンスと同じ形式
+    // 期待する形式をそのまま返す
+    const data = JSON.parse(text);
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
   } catch (e) {
-    console.error(e);
+    console.error("Fetch error:", e);
     return JSON.stringify({ candidates: [{ content: { parts: [{ text: `{ "narration": "生成エラーが発生しました: ${e.message}", "character_reactions": [] }` }] } }] });
   }
 }
 
-async function generateEpisodeSummary(project, episode) {
-    // 1. 小説形式のテキストを生成（HTMLタグなし）
-    const history = episode.turns.map(turn => {
-        let turnText = '';
-        // Player's turn
-        if (turn.player_input) {
-            if (turn.player_input.action) turnText += turn.player_input.action + '\n';
-            if (turn.player_input.speech) turnText += `「${turn.player_input.speech}」\n`;
-            if (turn.player_input.thought) turnText += `（${turn.player_input.thought}）\n`;
-        }
-        // AI's turn
-        if (turn.ai_output?.sequence) {
-            turn.ai_output.sequence.forEach(item => {
-                if (item.type === 'narration' && item.content) turnText += item.content + '\n';
-                if (item.type === 'reaction' && item.speech) turnText += `${item.character_name}「${item.speech}」\n`;
-            });
-        }
-        return turnText;
-    }).join('\n');
+// ======================================================
+// 以下、既存関数からcallGeminiを呼び出して利用
+// ======================================================
 
-    // 2. AIへのプロンプトを作成
-    const prompt = `
+async function generateEpisodeSummary(project, episode) {
+  const history = episode.turns.map(turn => {
+    let turnText = '';
+    if (turn.player_input) {
+      if (turn.player_input.action) turnText += turn.player_input.action + '\\n';
+      if (turn.player_input.speech) turnText += `「${turn.player_input.speech}」\\n`;
+      if (turn.player_input.thought) turnText += `（${turn.player_input.thought}）\\n`;
+    }
+    if (turn.ai_output?.sequence) {
+      turn.ai_output.sequence.forEach(item => {
+        if (item.type === 'narration' && item.content) turnText += item.content + '\\n';
+        if (item.type === 'reaction' && item.speech) turnText += `${item.character_name}「${item.speech}」\\n`;
+      });
+    }
+    return turnText;
+  }).join('\\n');
+
+  const prompt = `
 あなたは優秀な編集者です。以下の小説の本文を読み、100文字程度の簡潔で魅力的なあらすじを作成してください。
 
 # 小説本文
@@ -116,12 +82,10 @@ ${history}
 - JSON形式や見出しは不要です。
 `;
 
-    // 3. AIを呼び出し
-    const summary = await callGemini(prompt);
-
-    // 4. 生成されたあらすじを返す（余計なマークダウンや引用符を削除）
-    return summary.replace(/```/g, '').replace(/json/g, '').trim();
+  const summary = await callGemini(prompt);
+  return summary.replace(/```/g, '').replace(/json/g, '').trim();
 }
+
 
 async function generateAiResponse(project, episode, turn) {
     // ターンがAIの応答を生成する対象のターン自身を含まないように履歴を作成
