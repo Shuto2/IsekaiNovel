@@ -289,8 +289,14 @@ ${keywords}
 
     try {
         const result = await callGemini(prompt);
-        const cleanJsonString = extractJsonFromString(result);
-        const parsedResult = JSON.parse(cleanJsonString);
+        let parsedResult;
+        try {
+            const cleanJsonString = extractJsonFromString(result);
+            parsedResult = JSON.parse(cleanJsonString);
+        } catch (e) {
+            console.error("Failed to parse protagonist JSON:", e, "Original response:", result);
+            throw new Error("AIからの応答の解析に失敗しました。");
+        }
 
         // テキストエリアには見やすい形で表示
         protagonistResultOutput.value = `【設定】\n${parsedResult.desc}\n\n【一人称】\n${parsedResult.pronoun}`;
