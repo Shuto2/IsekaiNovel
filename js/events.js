@@ -402,7 +402,10 @@ function initializeEventListeners() {
   });
 
   // --- Editor Page Footer Controls ---
-  ui.playerInputEl.addEventListener('input', autoResizeTextarea);
+  ui.playerInputEl.addEventListener('input', (e) => {
+    autoResizeTextarea(e);
+    // ボタンの非活性化ロジックを削除し、常に入力できるようにします。
+  });
 
   ui.lengthControlSlider.addEventListener('input', (e) => {
     ui.lengthValueDisplay.textContent = e.target.value;
