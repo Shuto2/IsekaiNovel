@@ -380,8 +380,8 @@ function initializeEventListeners() {
     const playerText = ui.playerInputEl.value.trim();
     try {
       if (playerText === '') {
-        // プレイヤーの入力が空の場合、AIに続きを促す特別な入力を渡す
-        await handlePlayerInput(true, '物語の続きを生成してください。');
+        // プレイヤーの入力が空の場合、AIに続きを促す。handlePlayerInputは引数を1つしか取らない
+        await handlePlayerInput(true);
       } else {
         await handlePlayerInput(true);
       }

@@ -933,16 +933,12 @@ async function handlePlayerInput(shouldTriggerAi) {
             loadingText.textContent = 'AIが物語を生成中です...';
         }
 
-        ui.aiGenerateBtn.disabled = true;
-        ui.sendOnlyBtn.disabled = true;
         ui.playerInputEl.disabled = true;
         ui.globalLoadingOverlay.style.display = 'flex';
 
         await generateAiResponse(project, episode, turnForAi);
 
         ui.playerInputEl.disabled = false;
-        ui.aiGenerateBtn.disabled = false;
-        ui.sendOnlyBtn.disabled = false;
         ui.playerInputEl.focus();
     }
 }
