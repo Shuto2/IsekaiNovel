@@ -923,7 +923,22 @@ async function handlePlayerInput(shouldTriggerAi) {
         ui.playerInputEl.focus();
         } else if (shouldTriggerAi) { // 入力が空でAI生成ボタンが押された場合
         // 最後のターンが存在し、まだAIの応答がなければ、それをAI生成の対象とする
-        turnForAi = episode.turns.length > 0 && !episode.turns[episode.turns.length - 1].ai_output ? episode.turns[episode.turns.length - 1] : null;
+        if (episode.turns.length > 0 && !episode.turns[episode.turns.length - 1].ai_output) {
+            turnForAi = episode.turns[episode.turns.length - 1];
+        } else {
+            // AIが応答すべきターンがない場合（例: 全てのターンに応答済み、またはターンがまだない）
+            // AIに物語の開始や続きを促すための、player_inputが空の新しいターンを作成する
+            const newTurn = {
+                id: Date.now().toString(),
+                player_input: null, // プレイヤー入力はなし
+                ai_output: null,
+                timestamp: new Date().toISOString()
+            };
+            episode.turns.push(newTurn);
+            turnForAi = newTurn;
+            saveDB();
+            renderEpisodeEditor();
+        }
     }
 
     if (shouldTriggerAi) {
