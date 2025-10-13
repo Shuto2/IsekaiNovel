@@ -52,7 +52,24 @@ export const handler = async (event) => {
             response = await fetch(geminiEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }], role: 'user' }] }),
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }], role: 'user' }],
+                    // 安全性設定: ブロックされにくくする
+                    safetySettings: [
+                        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+                        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+                        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+                        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+                    ],
+                    // 生成設定: 応答の多様性を上げる
+                    generationConfig: {
+                        temperature: 1.0,
+                        topK: 0,
+                        topP: 0.95,
+                        maxOutputTokens: 8192,
+                        stopSequences: [],
+                    },
+                }),
             });
         } catch (fetchError) {
             console.error('Gemini API Fetch Error:', fetchError);
@@ -81,7 +98,15 @@ export const handler = async (event) => {
         }
 
         responseBody = JSON.parse(responseText);
-        const content = responseBody.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+
+        // 安全性評価によってブロックされた場合の対応
+        if (!responseBody.candidates || responseBody.candidates.length === 0) {
+            const blockReason = responseBody.promptFeedback?.blockReason;
+            const safetyRatings = responseBody.promptFeedback?.safetyRatings;
+            console.error('Content blocked by Gemini API.', { blockReason, safetyRatings });
+            return { statusCode: 400, headers, body: JSON.stringify({ error: `AIの応答がコンテンツポリシーによってブロックされました。理由: ${blockReason}` }) };
+        }
+        const content = responseBody.candidates[0]?.content?.parts?.[0]?.text || '{}';
 
         return {
             statusCode: 200,
