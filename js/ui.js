@@ -891,70 +891,67 @@ async function handleRegenerateClick(button) {
     }
 }
 
-async function handlePlayerInput(shouldTriggerAi) {
+async function handlePlayerInput(shouldTriggerAi = false) {
     const playerInputValue = ui.playerInputEl.value.trim();
     const project = db.projects.find(p => p.id === currentProjectId);
     const episode = project?.episodes.find(e => e.id === currentEpisodeId);
-    if (!episode) return;
 
-    let turnForAi = null;
+    // ボタンを無効化
+    ui.aiGenerateBtn.disabled = true;
+    ui.sendOnlyBtn.disabled = true;
 
-    if (playerInputValue) {
-        const lastTurn = episode.turns.length > 0 ? episode.turns[episode.turns.length - 1] : null;
-
-        if (lastTurn && !lastTurn.ai_output) {
-            lastTurn.player_input[currentInputMode] = playerInputValue;
-            turnForAi = lastTurn;
-        } else {
-            const newTurn = {
-                id: Date.now().toString(),
-                player_input: { [currentInputMode]: playerInputValue },
-                ai_output: null,
-                timestamp: new Date().toISOString()
-            };
-            episode.turns.push(newTurn);
-            turnForAi = newTurn;
+    try {
+        if (!episode) {
+            console.error("handlePlayerInput: Episode not found.");
+            return; // ここで処理を終了
         }
 
-        saveDB();
-        renderEpisodeEditor();
-        ui.playerInputEl.value = '';
-        autoResizeTextarea();
-        ui.playerInputEl.focus();
-        } else if (shouldTriggerAi) { // 入力が空でAI生成ボタンが押された場合
-        // 最後のターンが存在し、まだAIの応答がなければ、それをAI生成の対象とする
-        if (episode.turns.length > 0 && !episode.turns[episode.turns.length - 1].ai_output) {
-            turnForAi = episode.turns[episode.turns.length - 1];
-        } else {
-            // AIが応答すべきターンがない場合（例: 全てのターンに応答済み、またはターンがまだない）
-            // AIに物語の開始や続きを促すための、player_inputが空の新しいターンを作成する
-            const newTurn = {
-                id: Date.now().toString(),
-                player_input: null, // プレイヤー入力はなし
-                ai_output: null,
-                timestamp: new Date().toISOString()
-            };
-            episode.turns.push(newTurn);
-            turnForAi = newTurn;
+        let turnForAi = null;
+
+        // 1. プレイヤーの入力がある場合
+        if (playerInputValue) {
+            const lastTurn = episode.turns.length > 0 ? episode.turns[episode.turns.length - 1] : null;
+            if (lastTurn && !lastTurn.ai_output) {
+                lastTurn.player_input[currentInputMode] = playerInputValue;
+                turnForAi = lastTurn;
+            } else {
+                const newTurn = { id: Date.now().toString(), player_input: { [currentInputMode]: playerInputValue }, ai_output: null, timestamp: new Date().toISOString() };
+                episode.turns.push(newTurn);
+                turnForAi = newTurn;
+            }
             saveDB();
             renderEpisodeEditor();
+            ui.playerInputEl.value = '';
+            autoResizeTextarea();
+            ui.playerInputEl.focus();
+        } 
+        // 2. プレイヤー入力がなく、AI生成が要求された場合
+        else if (shouldTriggerAi) {
+            const lastTurn = episode.turns.length > 0 ? episode.turns[episode.turns.length - 1] : null;
+            if (lastTurn && !lastTurn.ai_output) {
+                turnForAi = lastTurn;
+            } else {
+                const newTurn = { id: Date.now().toString(), player_input: null, ai_output: null, timestamp: new Date().toISOString() };
+                episode.turns.push(newTurn);
+                turnForAi = newTurn;
+                saveDB();
+                renderEpisodeEditor();
+            }
         }
-    }
 
-    if (shouldTriggerAi) {
-        if (!turnForAi || turnForAi.ai_output) return;
-
-        const loadingText = document.getElementById('loading-text');
-        if (loadingText) {
-            loadingText.textContent = 'AIが物語を生成中です...';
+        // 3. AI生成を実行
+        if (shouldTriggerAi && turnForAi && !turnForAi.ai_output) {
+            const loadingText = document.getElementById('loading-text');
+            if (loadingText) loadingText.textContent = 'AIが物語を生成中です...';
+            ui.playerInputEl.disabled = true;
+            ui.globalLoadingOverlay.style.display = 'flex';
+            await generateAiResponse(project, episode, turnForAi);
         }
-
-        ui.playerInputEl.disabled = true;
-        ui.globalLoadingOverlay.style.display = 'flex';
-
-        await generateAiResponse(project, episode, turnForAi);
-
+    } finally {
+        // 処理がどの経路を辿っても、必ずボタンを再度有効化する
         ui.playerInputEl.disabled = false;
+        ui.aiGenerateBtn.disabled = false;
+        ui.sendOnlyBtn.disabled = false;
         ui.playerInputEl.focus();
     }
 }

@@ -372,25 +372,7 @@ function initializeEventListeners() {
   });
 
   // AI Generate Button
-  ui.aiGenerateBtn.addEventListener('click', async () => {
-    // ボタンを無効化して多重クリックを防止
-    ui.aiGenerateBtn.disabled = true;
-    ui.sendOnlyBtn.disabled = true;
-
-    const playerText = ui.playerInputEl.value.trim();
-    try {
-      if (playerText === '') {
-        // プレイヤーの入力が空の場合、AIに続きを促す。handlePlayerInputは引数を1つしか取らない
-        await handlePlayerInput(true);
-      } else {
-        await handlePlayerInput(true);
-      }
-    } finally {
-      // 処理完了後、ボタンを再度有効化
-      ui.aiGenerateBtn.disabled = false;
-      ui.sendOnlyBtn.disabled = false;
-    }
-  });
+  ui.aiGenerateBtn.addEventListener('click', () => handlePlayerInput(true));
 
   // Send Only Button
   ui.sendOnlyBtn.addEventListener('click', () => handlePlayerInput(false));
