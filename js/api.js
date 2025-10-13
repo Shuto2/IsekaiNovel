@@ -20,14 +20,13 @@ function extractJsonFromString(text) {
 
 // callGemini for Pages (client-side)
 async function callGemini(prompt) {
-  const LAMBDA_ENDPOINT_URL = 'https://0c4kgofpej.execute-api.ap-southeast-2.amazonaws.com/dev'; // ← あなたのステージURL
+  const LAMBDA_ENDPOINT_URL = 'https://0c4kgofpej.execute-api.ap-southeast-2.amazonaws.com/dev'; // ← あなたのAPI GatewayのステージURL
 
   try {
     const res = await fetch(LAMBDA_ENDPOINT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt }),
-      credentials: 'omit'
     });
 
     const text = await res.text();
@@ -38,15 +37,19 @@ async function callGemini(prompt) {
       let parsed;
       try { parsed = JSON.parse(text); } catch (e) { parsed = text; }
       console.error("Lambda HTTP error:", res.status, parsed);
-      return JSON.stringify({ candidates: [{ content: { parts: [{ text: `{ "narration": "API呼び出し失敗: ${res.status}", "character_reactions": [] }` }] } }] });
+      // Lambdaからのエラーメッセージを整形して返す
+      const errorMessage = parsed.error || `API呼び出し失敗: ${res.status}`;
+      return `{ "narration": "${errorMessage}", "character_reactions": [] }`;
     }
 
-    // 期待する形式をそのまま返す
+    // Lambdaからのレスポンスボディは、すでにGeminiのレスポンス(JSON文字列)になっているはず
     const data = JSON.parse(text);
+    // Geminiのレスポンスから、本文のテキスト部分を抽出して返す
     return data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
   } catch (e) {
     console.error("Fetch error:", e);
-    return JSON.stringify({ candidates: [{ content: { parts: [{ text: `{ "narration": "生成エラーが発生しました: ${e.message}", "character_reactions": [] }` }] } }] });
+    const errorMessage = `生成エラーが発生しました: ${e.message}`;
+    return `{ "narration": "${errorMessage}", "character_reactions": [] }`;
   }
 }
 

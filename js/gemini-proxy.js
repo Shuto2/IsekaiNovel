@@ -35,13 +35,14 @@ export const handler = async (event) => {
             };
         }
 
-        const { prompt, apiKey } = body;
+        const { prompt } = body;
+        const apiKey = process.env.GEMINI_API_KEY; // 環境変数からAPIキーを取得
 
-        if (!prompt || !apiKey) {
-            const missing = [];
-            if (!prompt) missing.push('prompt');
-            if (!apiKey) missing.push('apiKey');
-            return { statusCode: 400, headers, body: JSON.stringify({ error: `必須パラメータが不足しています: ${missing.join(', ')}` }) };
+        if (!prompt) {
+            return { statusCode: 400, headers, body: JSON.stringify({ error: `必須パラメータが不足しています: prompt` }) };
+        }
+        if (!apiKey) {
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'サーバー側でAPIキーが設定されていません。' }) };
         }
 
         const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
