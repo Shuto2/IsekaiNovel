@@ -58,8 +58,8 @@ async function callGemini(prompt) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt, apiKey }), // promptとapiKeyをLambdaに渡す
-    });
-
+      credentials: 'omit' // <- これを必ず指定
+});
     if (!res.ok) {
       let errText = `APIエラー: ${res.status}`;
       try {
