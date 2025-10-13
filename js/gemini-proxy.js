@@ -4,7 +4,7 @@ const ALLOWED_ORIGIN = '*';
 export const handler = async (event) => {
     const headers = {
         'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Content-Type': 'application/json',
     };
@@ -52,21 +52,21 @@ export const handler = async (event) => {
             body: JSON.stringify({ contents: [{ parts: [{ text: prompt }], role: 'user' }] }),
         });
 
-        const responseBody = await response.text();
+        const responseBody = await response.json(); // JSONとして解析
 
         if (!response.ok) {
             console.error('Gemini API Error:', { status: response.status, body: responseBody });
             return {
                 statusCode: response.status,
                 headers,
-                body: responseBody, // Geminiからのエラーをそのまま返す
+                body: JSON.stringify(responseBody), // Geminiからのエラーをそのまま返す
             };
         }
 
         return {
             statusCode: 200,
             headers,
-            body: responseBody, // Geminiからの成功レスポンスをそのまま返す
+            body: JSON.stringify(responseBody), // Geminiからの成功レスポンスをそのまま返す
         };
 
     } catch (error) {
@@ -74,7 +74,7 @@ export const handler = async (event) => {
         return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ error: 'Lambda関数内部で予期せぬエラーが発生しました。', details: error.message }),
+            body: JSON.stringify({ error: 'Lambda関数内部で予期せぬエラーが発生しました。' }),
         };
     }
 };

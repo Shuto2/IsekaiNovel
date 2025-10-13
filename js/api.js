@@ -36,7 +36,7 @@ function getLocalApiKey() {
 async function callGemini(prompt) {
   // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
   // ここに、AWS API Gatewayで作成したAPIエンドポイントのURLを貼り付けてください
-  const LAMBDA_ENDPOINT_URL = 'https://0c4kgofpej.execute-api.ap-southeast-2.amazonaws.com/';
+  const LAMBDA_ENDPOINT_URL = 'https://0c4kgofpej.execute-api.ap-southeast-2.amazonaws.com/dev';
   // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
 
   const apiKey = getLocalApiKey();
