@@ -66,6 +66,20 @@ const ui = {
   viewerSelectionBackBtn: document.getElementById('viewer-selection-back-btn'),
 };
 
+// --- UI Control Functions ---
+
+function showGlobalLoading(message = '読み込み中...') {
+  const loadingText = document.getElementById('loading-text');
+  if (loadingText) {
+    loadingText.textContent = message;
+  }
+  ui.globalLoadingOverlay.style.display = 'flex';
+}
+
+function hideGlobalLoading() {
+  ui.globalLoadingOverlay.style.display = 'none';
+}
+
 // --- Page Navigation ---
 function showPage(pageId) {
   Object.values(ui.pages).forEach(page => {
@@ -946,10 +960,8 @@ async function handlePlayerInput(shouldTriggerAi = false) {
                 turnForAi.player_input = {};
             }
 
-            const loadingText = document.getElementById('loading-text');
-            if (loadingText) loadingText.textContent = 'AIが物語を生成中です...';
+            showGlobalLoading('AIが物語を生成中です...');
             ui.playerInputEl.disabled = true;
-            ui.globalLoadingOverlay.style.display = 'flex';
             await generateAiResponse(project, episode, turnForAi);
         }
     } finally {

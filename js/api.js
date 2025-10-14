@@ -73,15 +73,15 @@ ${situationText}
 `;
 
   try {
-    ui.showGlobalLoading('背景を生成中...');
+    showGlobalLoading('背景を生成中...');
     const svgData = await callGemini(prompt, 'svg');
     const svgBlob = new Blob([svgData], { type: 'image/svg+xml' });
     const svgUrl = URL.createObjectURL(svgBlob);
-    document.getElementById('episodeEditor').style.backgroundImage = `url(${svgUrl})`;
+    document.getElementById('episode-editor-page').style.backgroundImage = `url(${svgUrl})`;
   } catch (error) {
     console.error('Failed to generate or apply background image:', error);
   } finally {
-    ui.hideGlobalLoading();
+    hideGlobalLoading();
   }
 }
 
@@ -286,7 +286,7 @@ ${(() => {
         await generateBackgroundImage(aiOutput.narration);
     }
 
-    ui.globalLoadingOverlay.style.display = 'none';
+    hideGlobalLoading();
     renderEpisodeEditor();
 }
 
@@ -359,5 +359,5 @@ ${history}
     project.lastUpdated = new Date().toISOString();
     saveDB();
 
-    ui.globalLoadingOverlay.style.display = 'none';
+    hideGlobalLoading();
 }
