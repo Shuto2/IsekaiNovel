@@ -24,6 +24,7 @@ const ui = {
   headerMenuBtn: document.getElementById('header-menu-btn'),
   headerMenuPopover: document.getElementById('header-menu-popover'),
   manageCharactersBtn: document.getElementById('manage-characters-btn'),
+  generateBackgroundBtn: document.getElementById('generate-background-btn'),
   playerInputEl: document.getElementById('player-input'),
   inputModeContainer: document.getElementById('input-mode-container'),
   mainInputModeBtn: document.getElementById('main-input-mode-btn'),

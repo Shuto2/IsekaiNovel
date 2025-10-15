@@ -1,17 +1,21 @@
 // Node.js v18以降のランタイムを想定しています。
 const ALLOWED_ORIGIN = '*';
 
-exports.handler = async (event) => {
-    const headers = {
+function getResponseHeaders(contentType = 'application/json') {
+    return {
         'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
         'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Content-Type': 'application/json',
+        'Content-Type': contentType,
     };
+}
+
+exports.handler = async (event) => {
+    const headers = getResponseHeaders();
 
     // CORSプリフライトリクエスト(OPTIONS)への対応
     if (event.requestContext?.http?.method === 'OPTIONS' || event.httpMethod === 'OPTIONS') {
-        return { statusCode: 204, headers };
+        return { statusCode: 204, headers: getResponseHeaders() };
     }
 
     try {
@@ -35,11 +39,11 @@ exports.handler = async (event) => {
             };
         }
 
-        const { prompt } = body;
+        const { prompt, response_format } = body; // response_format を受け取る
         const apiKey = process.env.GEMINI_API_KEY; // 環境変数からAPIキーを取得
 
         if (!prompt) {
-            return { statusCode: 400, headers, body: JSON.stringify({ error: `必須パラメータが不足しています: prompt` }) };
+            return { statusCode: 400, headers, body: JSON.stringify({ error: '必須パラメータが不足しています: prompt' }) };
         }
         if (!apiKey) {
             // このメッセージはフロントエンドで "Server misconfiguration: missing API key" と表示される原因かもしれません
@@ -47,7 +51,7 @@ exports.handler = async (event) => {
         }
 
         const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
-
+        
         let response;
         try {
             response = await fetch(geminiEndpoint, {
@@ -109,10 +113,14 @@ exports.handler = async (event) => {
         }
         const content = responseBody.candidates[0]?.content?.parts?.[0]?.text || '{}';
 
+        // レスポンス形式に応じてContent-Typeを切り替える
+        const responseContentType = response_format === 'svg' ? 'image/svg+xml' : 'application/json';
+        const finalHeaders = getResponseHeaders(responseContentType);
+
         return {
             statusCode: 200,
-            headers,
-            body: content, // フロントエンドが欲しいJSON文字列だけを返す
+            headers: finalHeaders,
+            body: content, // JSON文字列またはSVG文字列を返す
         };
 
     } catch (error) {

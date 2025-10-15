@@ -19,14 +19,14 @@ function extractJsonFromString(text) {
 }
 
 // callGemini for Pages (client-side)
-async function callGemini(prompt) {
+async function callGemini(prompt, response_format = 'json') {
   const LAMBDA_ENDPOINT_URL = 'https://0c4kgofpej.execute-api.ap-southeast-2.amazonaws.com/dev'; // ← あなたのAPI GatewayのステージURL
 
   try {
     const res = await fetch(LAMBDA_ENDPOINT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt, response_format }),
     });
 
     const text = await res.text();
@@ -41,14 +41,47 @@ async function callGemini(prompt) {
       return `{ "narration": "${errorMessage}", "character_reactions": [] }`;
     }
 
-    // Lambdaからのレスポンスボディは、フロントエンドが期待するJSON文字列そのもの
-    // そのまま返せば良い
+    // response_formatが 'json' の場合、LambdaからのレスポンスボディはJSON文字列
+    // response_formatが 'svg' の場合、LambdaからのレスポンスボディはSVG文字列
+    if (response_format === 'json') {
+        return text || '{}';
+    }
     return text || '{}';
 
   } catch (e) {
     console.error("Fetch error:", e);
     const errorMessage = `APIへの接続に失敗しました: ${e.message}`;
     return `{ "narration": "${errorMessage}", "character_reactions": [] }`;
+  }
+}
+
+// --- Background Image Generation ---
+async function generateBackgroundImage(situationText) {
+  const prompt = `
+あなたはプロの漫画家またはアニメの背景アーティストです。以下の状況説明テキストを読んで、そのシーンに合う背景の線画をSVG形式で生成してください。
+
+# 依頼内容
+- 状況に合った背景を、白黒の線画で、日本のアニメやライトノベルの挿絵のような、繊細で雰囲気のあるタッチで描いてください。
+- キャラクターは描かないでください。背景のみに集中してください。
+- 生成するSVGは、viewBox="0 0 1024 768" とし、レスポンシブに対応できるようにしてください。
+- SVGには背景色を指定せず、線（stroke）は黒（#000000）、線の太さ（stroke-width）は 1〜3程度で強弱をつけてください。
+- あなたの応答は、解説や前置きを一切含まず、<svg>タグから始まるSVGコードのみを出力してください。
+
+# 状況説明
+${situationText}
+`;
+
+  try {
+    showGlobalLoading('背景を生成中...');
+    const svgData = await callGemini(prompt, 'svg');
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml' });
+    const svgUrl = URL.createObjectURL(svgBlob);
+    document.getElementById('episode-editor-page').style.backgroundImage = `url(${svgUrl})`;
+  } catch (error) {
+    console.error('Failed to generate or apply background image:', error);
+    alert('背景画像の生成に失敗しました。');
+  } finally {
+    hideGlobalLoading();
   }
 }
 
@@ -245,7 +278,18 @@ ${(() => {
     project.lastUpdated = new Date().toISOString();
     saveDB();
 
-    ui.globalLoadingOverlay.style.display = 'none';
+    // --- 背景生成ロジック (第1話の初回のみ) ---
+    const episodeIndex = project.episodes.findIndex(e => e.id === episode.id);
+    const isFirstTurn = episode.turns.length === 1 && episode.turns[0].id === turn.id;
+    if (episodeIndex === 0 && isFirstTurn) {
+        const firstSequenceItem = aiOutput.sequence?.[0];
+        const situationText = firstSequenceItem?.content || (firstSequenceItem ? `${firstSequenceItem.character_name}「${firstSequenceItem.speech}」` : null);
+        if (situationText) {
+            await generateBackgroundImage(situationText);
+        }
+    }
+
+    hideGlobalLoading();
     renderEpisodeEditor();
 }
 
