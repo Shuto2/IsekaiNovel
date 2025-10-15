@@ -14,7 +14,8 @@ function showPage(pageId, options = {}) {
   document.querySelectorAll('.page').forEach(page => {
     page.style.display = 'none';
   });
-  document.getElementById(pageId).style.display = 'block';
+  const fullPageId = `${pageId}-page`;
+  document.getElementById(fullPageId).style.display = 'block';
 
   if (options.render) {
     if (pageId === 'projectList') renderProjectList();
