@@ -324,6 +324,7 @@
             <button class="generator-btn" data-generator="world"><span class="material-symbols-outlined">public</span><span>世界観</span></button>
             <button class="generator-btn" data-generator="protagonist"><span class="material-symbols-outlined">person</span><span>主人公</span></button>
             <button class="generator-btn" data-generator="character"><span class="material-symbols-outlined">groups</span><span>キャラクター</span></button>
+            <button class="generator-btn" data-generator="map"><span class="material-symbols-outlined">map</span><span>マップ</span></button>
             <button class="generator-btn unimplemented" data-generator="event"><span class="unimplemented-tag">未実装</span><span class="material-symbols-outlined">bolt</span><span>導入イベント</span></button>
             <button class="generator-btn unimplemented" data-generator="quest"><span class="unimplemented-tag">未実装</span><span class="material-symbols-outlined">flag</span><span>目的/クエスト</span></button>
             <button class="generator-btn unimplemented" data-generator="item"><span class="unimplemented-tag">未実装</span><span class="material-symbols-outlined">diamond</span><span>アイテム</span></button>
@@ -384,6 +385,24 @@
           <p class="modal-description">この設定をどうしますか？</p>
           <div class="generator-action-buttons">
             <button id="copy-character-to-project-btn" class="action-btn-secondary">既存プロジェクトに追加</button>
+          </div>
+        </div>
+
+        <!-- Map Generator Screen -->
+        <div id="generator-map-screen" style="display: none;">
+          <div class="generator-screen-header">
+            <button class="back-to-generator-main-btn back-btn"><span class="material-symbols-outlined">arrow_back</span></button>
+            <h3>マップジェネレーター</h3>
+          </div>
+          <label for="map-keywords-input">キーワード</label>
+          <textarea id="map-keywords-input" rows="2" placeholder="例: 中央に巨大な山脈, 沿岸部に商業都市, 北部は未開の森"></textarea>
+          <button id="generate-map-btn" class="generate-btn-main"><span class="material-symbols-outlined">auto_awesome</span>生成する</button>
+          <label for="map-result-output">生成結果</label>
+          <textarea id="map-result-output" rows="6" placeholder="ここにマップ情報が生成されます..."></textarea>
+          <button id="regenerate-map-btn" class="regenerate-btn"><span class="material-symbols-outlined">replay</span>再生成</button>
+          <p class="modal-description">この設定をどうしますか？</p>
+          <div class="generator-action-buttons">
+            <button id="copy-map-to-project-btn" class="action-btn-secondary">既存プロジェクトにコピー</button>
           </div>
         </div>
       </div>

@@ -8,6 +8,7 @@ const generatorMainScreen = document.getElementById('generator-main-screen');
 const generatorWorldScreen = document.getElementById('generator-world-screen');
 const generatorProtagonistScreen = document.getElementById('generator-protagonist-screen');
 const generatorCharacterScreen = document.getElementById('generator-character-screen');
+const generatorMapScreen = document.getElementById('generator-map-screen');
 
 // Buttons within Generator
 const generateWorldBtn = document.getElementById('generate-world-btn');
@@ -21,6 +22,9 @@ const copyProtagonistToProjectBtn = document.getElementById('copy-protagonist-to
 const generateCharacterBtn = document.getElementById('generate-character-btn');
 const regenerateCharacterBtn = document.getElementById('regenerate-character-btn');
 const copyCharacterToProjectBtn = document.getElementById('copy-character-to-project-btn');
+const generateMapBtn = document.getElementById('generate-map-btn');
+const regenerateMapBtn = document.getElementById('regenerate-map-btn');
+const copyMapToProjectBtn = document.getElementById('copy-map-to-project-btn');
 
 // Inputs and Outputs for World Generator
 const worldKeywordsInput = document.getElementById('world-keywords-input');
@@ -33,6 +37,10 @@ const protagonistResultOutput = document.getElementById('protagonist-result-outp
 // Inputs and Outputs for Character Generator
 const characterKeywordsInput = document.getElementById('character-keywords-input');
 const characterResultOutput = document.getElementById('character-result-output');
+
+// Inputs and Outputs for Map Generator
+const mapKeywordsInput = document.getElementById('map-keywords-input');
+const mapResultOutput = document.getElementById('map-result-output');
 
 /**
  * Opens the generator modal.
@@ -48,6 +56,8 @@ function openGeneratorModal() {
         protagonistResultOutput.value = '';
         characterKeywordsInput.value = '';
         characterResultOutput.value = '';
+        mapKeywordsInput.value = '';
+        mapResultOutput.value = '';
     }
 }
 
@@ -66,7 +76,7 @@ function closeGeneratorModal() {
  */
 function showGeneratorScreen(screenName) {
     // Hide all screens first
-    [generatorMainScreen, generatorWorldScreen, generatorProtagonistScreen, generatorCharacterScreen].forEach(screen => {
+    [generatorMainScreen, generatorWorldScreen, generatorProtagonistScreen, generatorCharacterScreen, generatorMapScreen].forEach(screen => {
         if(screen) screen.style.display = 'none';
     });
 
@@ -80,6 +90,9 @@ function showGeneratorScreen(screenName) {
             break;
         case 'character':
             if(generatorCharacterScreen) generatorCharacterScreen.style.display = 'block';
+            break;
+        case 'map':
+            if(generatorMapScreen) generatorMapScreen.style.display = 'block';
             break;
         default: // 'main'
             if(generatorMainScreen) generatorMainScreen.style.display = 'block';
@@ -126,6 +139,9 @@ function openProjectSelectionForCopy(dataType, data) {
             } else if (dataType === 'character') {
                 const charCount = Array.isArray(project.characters) ? project.characters.length : 0;
                 subtext = `(現在の登場人物数: ${charCount})`;
+            } else if (dataType === 'map') {
+                const landmarkCount = project.map?.landmarks ? project.map.landmarks.length : 0;
+                subtext = project.map ? `(現在の重要地点数: ${landmarkCount})` : '(マップ未設定)';
             }
             item.innerHTML = `${project.title} <br><span style="font-size:0.8em; color: #888;">${subtext}</span>`;
             item.dataset.projectId = project.id;
@@ -167,6 +183,8 @@ projectSelectionList.addEventListener('click', (e) => {
     } else if (copyDataType === 'character') {
         // copyData は { name, desc } オブジェクト
         confirmMessage = `プロジェクト「${project.title}」にキャラクター「${copyData.name}」を追加しますか？`;
+    } else if (copyDataType === 'map') {
+        confirmMessage = `プロジェクト「${project.title}」のマップ情報を上書きしますか？`;
     }
 
     if (confirm(confirmMessage)) {
@@ -180,6 +198,7 @@ projectSelectionList.addEventListener('click', (e) => {
                 description: copyData.desc,
                 faction: ''
             });
+        } else if (copyDataType === 'map') { project.map = copyData;
         }
         saveDB();
         alert(`「${project.title}」の設定を更新しました。`);
@@ -457,6 +476,79 @@ copyCharacterToProjectBtn.addEventListener('click', () => {
     openProjectSelectionForCopy('character', characterData);
 });
 
+/**
+ * Generates map setting using AI based on keywords.
+ */
+async function generateMapSetting() {
+    const keywords = mapKeywordsInput.value.trim();
+    if (!keywords) {
+        alert('キーワードを入力してください。');
+        return;
+    }
+
+    generateMapBtn.disabled = true;
+    regenerateMapBtn.disabled = true;
+    mapResultOutput.value = 'AIにより生成中...';
+
+    const prompt = `
+あなたはプロのゲームデザイナー、特にファンタジー世界のマップ制作を得意とする専門家です。
+以下のキーワードを元に、物語の舞台となる世界の地理情報を生成してください。
+
+# キーワード
+${keywords}
+
+# あなたへの指示
+- 出力は必ず以下のJSON形式に従ってください。
+- continent: 大陸全体の名前と概要を記述します。
+- regions: 大陸内の主要な国やエリアの情報を配列で記述します。
+- landmarks: 物語の重要地点（街、ダンジョン、自然物など）を配列で記述します。
+
+例:
+{
+  "continent": {
+    "name": "アルカディア大陸",
+    "description": "中央を巨大な山脈が縦断し、東西で文化が大きく異なる大陸。東部は魔法技術が発展した王国群、西部は広大な未開の森林と砂漠が広がる。"
+  },
+  "regions": [
+    { "name": "アヴァロン王国", "description": "大陸東部に位置する最大の王国。魔法ギルドが強い影響力を持つ。" },
+    { "name": "黄昏の森", "description": "大陸西部に広がる古代樹の森。多くの魔物が生息し、迷い込むと二度と戻れないと言われる。" }
+  ],
+  "landmarks": [
+    { "name": "王都ルミナス", "type": "街", "description": "アヴァロン王国の首都。白亜の城壁に囲まれた美しい都市。" },
+    { "name": "忘れられた地下神殿", "type": "ダンジョン", "description": "黄昏の森の奥深くにある古代遺跡。強力なアーティファクトが眠るとされる。" },
+    { "name": "竜の顎門", "type": "自然物", "description": "大陸を分断する中央山脈の唯一の通り道。常に激しい風が吹き荒れている。" }
+  ]
+}
+`;
+
+    try {
+        const result = await callGemini(prompt);
+        const cleanJsonString = extractJsonFromString(result);
+        const parsedResult = JSON.parse(cleanJsonString);
+
+        let outputText = `■大陸: ${parsedResult.continent.name}\n${parsedResult.continent.description}\n\n`;
+        outputText += '■エリア:\n';
+        parsedResult.regions.forEach(r => {
+            outputText += `・${r.name}: ${r.description}\n`;
+        });
+        outputText += '\n■重要地点:\n';
+        parsedResult.landmarks.forEach(l => {
+            outputText += `・${l.name} (${l.type}): ${l.description}\n`;
+        });
+
+        mapResultOutput.value = outputText;
+
+    } catch (error) {
+        console.error("Map setting generation failed:", error);
+        mapResultOutput.value = "エラーが発生しました。コンソールを確認してください。";
+    } finally {
+        generateMapBtn.disabled = false;
+        regenerateMapBtn.disabled = false;
+    }
+}
+
+generateMapBtn.addEventListener('click', generateMapSetting);
+regenerateMapBtn.addEventListener('click', generateMapSetting);
 
 
 if (createProjectFromWorldBtn) {
