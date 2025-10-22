@@ -486,3 +486,41 @@
 .indicator-marker.level-low { top: 0%; }   /* 上 */
 .indicator-marker.level-mid { top: 50%; }  /* 中央 */
 .indicator-marker.level-high { top: 100%; } /* 下 */
+
+/* editor.css に以下を追記 */
+
+/*
+ * エピソード編集画面のレイアウト調整
+ * main要素(#chat-container)の下部に、入力バー(.chat-footer)と
+ * フッターメニュー(.app-menu)の両方が表示されるためのスペースを確保する。
+ * calc() を使用して、それぞれの高さを合計した値をpadding-bottomに設定する。
+ * var(--chat-footer-height) と var(--footer-menu-height) は、
+ * それぞれのコンポーネントのCSSで定義されているカスタムプロパティを想定。
+ * もし定義されていない場合は、実際の高さ(例: 80px, 60px)を指定する。
+ */
+#episode-editor-page #chat-container {
+  padding-bottom: calc(var(--chat-footer-height, 88px) + var(--footer-menu-height, 60px));
+}
+
+/*
+ * 新しいフッターメニュー(.app-menu)を、入力バー(.chat-footer)の下、
+ * 画面の最下部に固定する。
+ */
+#episode-editor-page > .app-menu {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 800px; /* base.css の .page の max-width と合わせる */
+  z-index: 10; /* .chat-footerより手前に来るように調整 */
+  /* .app-menu の背景色や境界線は components.css で定義されているため、ここでは不要 */
+}
+
+/*
+ * 既存の入力バー(.chat-footer)の固定位置を、
+ * 新しいフッターメニューの高さ分だけ上に持ち上げる。
+ */
+#episode-editor-page .chat-footer {
+  bottom: var(--footer-menu-height, 60px);
+}

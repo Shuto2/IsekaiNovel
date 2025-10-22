@@ -275,16 +275,11 @@ function initializeEventListeners() {
     }
   });
 
-  // Header Menu Popover
-  ui.headerMenuBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    ui.headerMenuPopover.style.display = ui.headerMenuPopover.style.display === 'block' ? 'none' : 'block';
-  });
+  // Header Menu Popover (removed)
 
   // Character Management Modal
   ui.manageCharactersBtn.addEventListener('click', () => {
     ui.characterManagementModalOverlay.style.display = 'flex';
-    ui.headerMenuPopover.style.display = 'none';
   });
   ui.closeCharacterManagementBtn.addEventListener('click', () => ui.characterManagementModalOverlay.style.display = 'none');
   ui.characterListPopover.addEventListener('change', (e) => {
@@ -299,7 +294,6 @@ function initializeEventListeners() {
     ui.characterNameInput.value = '';
     ui.characterDescInput.value = '';
     ui.characterModalOverlay.style.display = 'flex';
-    ui.headerMenuPopover.style.display = 'none';
   });
   ui.closeCharacterBtn.addEventListener('click', closeCharacterModal);
   ui.saveCharacterBtn.addEventListener('click', () => {
@@ -425,10 +419,6 @@ function initializeEventListeners() {
   // --- Global Click Listener for Popovers ---
   document.addEventListener('click', (event) => { // Renamed to event for clarity
     const target = event.target;
-    // Close header menu if click is outside
-    if (ui.headerMenuPopover.style.display === 'block' && !ui.headerMenuBtn.contains(target)) {
-      ui.headerMenuPopover.style.display = 'none';
-    }
     // Close input mode options if click is outside
     if (ui.inputModeOptions.style.display === 'block' && !ui.mainInputModeBtn.contains(target)) {
       ui.inputModeOptions.style.display = 'none';
