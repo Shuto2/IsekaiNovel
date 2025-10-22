@@ -191,6 +191,11 @@ function initializeEventListeners() {
     }
   });
 
+  // Close Project Settings Modal
+  document.getElementById('close-project-settings-btn').addEventListener('click', () => {
+    ui.settingsModalOverlay.style.display = 'none';
+  });
+
   // Auto-save for settings
   [ui.worldSettingInput, ui.protagonistSettingInput, ui.protagonistPronounInput].forEach(input => {
     input.addEventListener('input', () => {
@@ -367,6 +372,84 @@ function initializeEventListeners() {
 
       ui.globalLoadingOverlay.style.display = 'none';
       alert('エピソードを完了し、あらすじを保存しました。');
+    }
+  });
+
+  // Background Generation Button
+  ui.generateBackgroundBtn.addEventListener('click', async () => {
+    try {
+      showLoading('背景生成の準備をしています...');
+      const project = db.projects.find(p => p.id === currentProjectId);
+      const episode = project?.episodes.find(e => e.id === currentEpisodeId);
+      if (!episode) return;
+
+      // 1. コンテキストからプロンプトを生成
+      const contextText = episode.turns
+        .map(turn => {
+          let turnText = '';
+          if (turn.player_input?.action) turnText += turn.player_input.action + '\n';
+          if (turn.ai_output?.sequence) {
+              turnText += turn.ai_output.sequence.map(item => item.type === 'narration' ? item.content : '').join('\n');
+          }
+          return turnText;
+        })
+        .join('\n')
+        .slice(-1000); // 直近1000文字のナレーションと行動をコンテキストとして使用
+
+      if (contextText.trim() === '') {
+        console.warn('背景を生成するための十分な文脈がありません。物語を進めてください。');
+        return;
+      }
+
+      // 2. 日本語の文脈を、画像生成AI向けの英語のキーワードに翻訳させる
+      showLoading('プロンプトを翻訳中です...');
+      const translationPrompt = `
+      以下の日本語の文章を、画像生成AIのプロンプトとして使えるように、情景を的確に表す簡潔な英語のキーワードの羅列に翻訳してください。
+
+      # 元の文章
+      ${contextText}
+      
+      # 翻訳指示
+      - 人物に関する記述は無視してください。
+      - 出力は英語のキーワードをカンマ区切りで並べたものだけにしてください。
+      - 例: a dark forest, foggy, moonlight, ancient trees
+      `;
+
+      console.log("翻訳用プロンプト:", translationPrompt);
+      const translatedContext = await callGemini(translationPrompt);
+
+      // 翻訳ステップが成功したかチェック
+      try {
+        const potentialError = JSON.parse(translatedContext);
+        if (potentialError && potentialError.narration) {
+          throw new Error(`翻訳ステップでエラーが発生しました: ${potentialError.narration}`);
+        }
+      } catch (e) {
+        if (e.message.startsWith('翻訳ステップでエラーが発生しました')) {
+          console.error('画像生成エラー:', e.message);
+          return;
+        }
+      }
+      console.log("翻訳された英語コンテキスト:", translatedContext);
+
+      // 3. 翻訳された英語を使って、最終的な画像生成プロンプトを組み立てる
+      const imagePrompt = `masterpiece, best quality, beautiful anime style background art, fantasy landscape, detailed sky, cinematic lighting, no humans, ${translatedContext}`;
+
+      console.log("画像生成AIに送信するプロンプト:", imagePrompt);
+
+      // 4. 画像を生成
+      showLoading('背景画像を生成しています...');
+      const imageBase64 = await generateImage(imagePrompt);
+
+      // 5. UIを更新 & 状態を保存
+      updateEpisodeBackground(imageBase64);
+      episode.backgroundImage = imageBase64;
+      saveDB();
+
+    } catch (error) {
+      console.error('背景画像の生成に失敗しました。', error);
+    } finally {
+      hideLoading();
     }
   });
 

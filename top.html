@@ -71,6 +71,7 @@
 
   <!-- Page: Episode Editor -->
   <div id="episode-editor-page" class="page" style="display: none;">
+    <div id="episode-background-container" class="episode-background-container"></div>
     <header class="page-header sticky">
       <button class="back-btn" data-target="project-detail-page"><span class="material-symbols-outlined">arrow_back</span></button>
       <div class="header-title-group">
@@ -175,47 +176,6 @@
     </footer>
   </div>
 
-  <!-- Modals -->
-  <div id="project-settings-modal-overlay" style="display: none;">
-    <div id="project-settings-modal">
-      <h2>プロジェクト設定</h2>
-      <div class="modal-content">
-        <label for="world-setting-input">世界観</label>
-        <textarea id="world-setting-input" rows="5" placeholder="例: 剣と魔法が存在する中世ヨーロッパ風のファンタジー世界。エルフやドワーフなどの亜人も共存している。"></textarea>
-
-        <label for="protagonist-setting-input">主人公設定</label>
-        <textarea id="protagonist-setting-input" rows="3" placeholder="例: 17歳の高校生、鈴木太郎。ある日トラックに轢かれ異世界へ。特別なスキルはないが、持ち前の人の良さと現代知識で困難を乗り越える。"></textarea>
-
-        <label for="protagonist-pronoun-input">主人公の一人称代名詞</label>
-        <input type="text" id="protagonist-pronoun-input" placeholder="例: 俺、私、僕 (AIが一人称視点で描写する際に使用)">
-
-        <div class="modal-label-group">
-          <label>プロジェクト全体の登場人物</label>
-          <button id="add-project-character-btn"><span class="material-symbols-outlined">person_add</span>追加</button>
-        </div>
-        <div class="character-editor-container">
-          <div id="project-character-list-container" class="character-list-column">
-            <!-- Character list will be rendered here -->
-          </div>
-          <div id="project-character-detail-area" class="character-detail-column" style="display: none;">
-            <label for="edit-char-name-input">名前</label>
-            <input type="text" id="edit-char-name-input" placeholder="キャラクター名">
-            <label for="edit-char-faction-input">勢力</label>
-            <div class="faction-input-wrapper">
-              <input type="text" id="edit-char-faction-input" list="faction-suggestions" placeholder="所属する勢力名 (例: 王国, ギルド)">
-              <span class="material-symbols-outlined dropdown-arrow-icon">arrow_drop_down</span>
-              <datalist id="faction-suggestions"></datalist>
-            </div>
-            <label for="edit-char-desc-input">説明</label>
-            <textarea id="edit-char-desc-input" rows="4" placeholder="キャラクター説明"></textarea>
-            <button id="delete-char-btn"><span class="material-symbols-outlined">delete</span>キャラクターを削除</button>
-          </div>
-        </div>
-      </div>
-      <!-- ボタンは自動保存化に伴い不要になったため削除 -->
-    </div>
-  </div>
-
   <!-- Settings Modal -->
   <div id="settings-modal-overlay" style="display: none;">
     <div id="settings-modal">
@@ -253,7 +213,9 @@
           </div>
         </div>
       </div>
-      <!-- ボタンは自動保存化に伴い不要になったため削除 -->
+      <div class="modal-actions">
+        <button id="close-project-settings-btn" class="modal-action-btn" title="閉じる"><span class="material-symbols-outlined">close</span></button>
+      </div>
     </div>
   </div>
 

@@ -38,7 +38,7 @@ const ui = {
   novelContent: document.getElementById('novel-content'),
   closeNovelViewerBtn: document.getElementById('close-novel-viewer-btn'),
   nextEpisodeBtn: document.getElementById('next-episode-btn'),
-  globalLoadingOverlay: document.getElementById('global-loading-overlay'),
+  globalLoadingOverlay: document.getElementById('global-loading-overlay'), // この行は変更なし
   projectSettingsBtn: document.querySelector('.settings-btn'),
   settingsModalOverlay: document.getElementById('settings-modal-overlay'),
   worldSettingInput: document.getElementById('world-setting-input'),
@@ -63,6 +63,7 @@ const ui = {
   viewerSelectionContent: document.getElementById('viewer-selection-content'),
   closeViewerSelectionBtn: document.getElementById('close-viewer-selection-btn'),
   viewerSelectionBackBtn: document.getElementById('viewer-selection-back-btn'),
+  episodeBackgroundContainer: document.getElementById('episode-background-container'),
 };
 
 // --- Page Navigation ---
@@ -168,6 +169,9 @@ function renderEpisodeEditor() {
     const episodeIndex = project.episodes.findIndex(e => e.id === currentEpisodeId);
     ui.episodeTitleEl.textContent = `第${episodeIndex + 1}話：${episode.title}`;
     ui.chatContainer.innerHTML = '';
+
+    // 背景画像を復元
+    updateEpisodeBackground(episode.backgroundImage || null);
 
     const charCountEl = document.getElementById('episode-char-count');
     if (charCountEl) {
@@ -448,6 +452,38 @@ function countEpisodeCharacters(episode) {
         }
     });
     return totalChars;
+}
+
+/**
+ * グローバルローディングオーバーレイを表示する
+ * @param {string} [message='読み込み中...'] - 表示するメッセージ
+ */
+function showLoading(message = '読み込み中...') {
+  const loadingText = document.getElementById('loading-text');
+  if (loadingText) {
+    loadingText.textContent = message;
+  }
+  ui.globalLoadingOverlay.style.display = 'flex';
+}
+
+/**
+ * グローバルローディングオーバーレイを非表示にする
+ */
+function hideLoading() {
+  ui.globalLoadingOverlay.style.display = 'none';
+}
+/**
+ * エピソードエディターの背景画像を更新する
+ * @param {string | null} imageBase64 - 背景画像のBase64文字列、またはリセットの場合はnull
+ */
+function updateEpisodeBackground(imageBase64) {
+  if (imageBase64) {
+    ui.episodeBackgroundContainer.style.backgroundImage = `url('data:image/jpeg;base64,${imageBase64}')`;
+    ui.pages.episodeEditor.classList.add('has-background');
+  } else {
+    ui.episodeBackgroundContainer.style.backgroundImage = 'none';
+    ui.pages.episodeEditor.classList.remove('has-background');
+  }
 }
 
 function updateThemeIcon(isDarkMode) {

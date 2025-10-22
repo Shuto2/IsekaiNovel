@@ -1,24 +1,14 @@
 // Node.js v18以降のランタイムを想定しています。
-const ALLOWED_ORIGIN = '*';
 
 exports.handler = async (event) => {
-    const headers = {
-        'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-        'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Content-Type': 'application/json',
-    };
-
-    // CORSプリフライトリクエスト(OPTIONS)への対応
-    if (event.requestContext?.http?.method === 'OPTIONS' || event.httpMethod === 'OPTIONS') {
-        return { statusCode: 204, headers };
-    }
-
     try {
+        // CORSプリフライトリクエスト(OPTIONS)はLambdaの関数URL設定で処理されるため、ここではPOSTのみをチェック
+        if (event.requestContext?.http?.method !== 'POST' && event.httpMethod !== 'POST') {
+            return { statusCode: 405, body: JSON.stringify({ error: 'Method Not Allowed' }) };
+        }
         if (!event.body) {
             return {
                 statusCode: 400,
-                headers,
                 body: JSON.stringify({ error: 'リクエストボディが空です。' }),
             };
         }
@@ -30,7 +20,6 @@ exports.handler = async (event) => {
             console.error('JSON Parse Error:', parseError.message, 'Received body:', event.body);
             return {
                 statusCode: 400,
-                headers,
                 body: JSON.stringify({ error: 'リクエストボディのJSON解析に失敗しました。' }),
             };
         }
@@ -39,11 +28,10 @@ exports.handler = async (event) => {
         const apiKey = process.env.GEMINI_API_KEY; // 環境変数からAPIキーを取得
 
         if (!prompt) {
-            return { statusCode: 400, headers, body: JSON.stringify({ error: `必須パラメータが不足しています: prompt` }) };
+            return { statusCode: 400, body: JSON.stringify({ error: `必須パラメータが不足しています: prompt` }) };
         }
         if (!apiKey) {
-            // このメッセージはフロントエンドで "Server misconfiguration: missing API key" と表示される原因かもしれません
-            return { statusCode: 500, headers, body: JSON.stringify({ error: 'Server misconfiguration: missing API key' }) };
+            return { statusCode: 500, body: JSON.stringify({ error: 'Server misconfiguration: missing API key' }) };
         }
 
         const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
@@ -76,7 +64,6 @@ exports.handler = async (event) => {
             console.error('Gemini API Fetch Error:', fetchError);
             return {
                 statusCode: 502, // Bad Gateway
-                headers,
                 body: JSON.stringify({ error: 'Gemini APIへの接続に失敗しました。' }),
             };
         }
@@ -93,7 +80,6 @@ exports.handler = async (event) => {
             }
             return {
                 statusCode: response.status,
-                headers,
                 body: JSON.stringify({ error: `Gemini APIエラー: ${responseBody.error?.message || '詳細不明'}` }),
             };
         }
@@ -105,13 +91,12 @@ exports.handler = async (event) => {
             const blockReason = responseBody.promptFeedback?.blockReason;
             const safetyRatings = responseBody.promptFeedback?.safetyRatings;
             console.error('Content blocked by Gemini API.', { blockReason, safetyRatings });
-            return { statusCode: 400, headers, body: JSON.stringify({ error: `AIの応答がコンテンツポリシーによってブロックされました。理由: ${blockReason}` }) };
+            return { statusCode: 400, body: JSON.stringify({ error: `AIの応答がコンテンツポリシーによってブロックされました。理由: ${blockReason}` }) };
         }
         const content = responseBody.candidates[0]?.content?.parts?.[0]?.text || '{}';
 
         return {
             statusCode: 200,
-            headers,
             body: content, // フロントエンドが欲しいJSON文字列だけを返す
         };
 
@@ -119,7 +104,6 @@ exports.handler = async (event) => {
         console.error('Lambda Internal Error:', error.name, error.message, error.stack);
         return {
             statusCode: 500,
-            headers,
             body: JSON.stringify({ error: 'Lambda関数内部で予期せぬエラーが発生しました。' }),
         };
     }

@@ -52,6 +52,41 @@ async function callGemini(prompt) {
   }
 }
 
+/**
+ * 画像生成AIを呼び出し、画像のBase64文字列を返す
+ * @param {string} prompt - 画像生成のプロンプト
+ * @returns {Promise<string>} - 生成された画像のBase64文字列
+ */
+async function generateImage(prompt) {
+  // Pollinations.aiのエンドポイントを使用 (APIキー不要、Lambdaプロキシ不要)
+  const encodedPrompt = encodeURIComponent(prompt);
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}`;
+
+  try {
+    // 1. 画像URLから画像データを直接取得
+    const response = await fetch(imageUrl);
+
+    if (!response.ok) {
+      throw new Error(`画像生成APIのリクエストに失敗しました: ${response.status} ${response.statusText}`);
+    }
+
+    // 2. 取得した画像データをBlobオブジェクトに変換
+    const imageBlob = await response.blob();
+
+    // 3. BlobをBase64文字列に変換
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]); // "data:...," の部分を削除
+      reader.onerror = reject;
+      reader.readAsDataURL(imageBlob);
+    });
+
+  } catch (error) {
+    console.error('画像生成エラー:', error);
+    throw error;
+  }
+}
+
 // ======================================================
 // 以下、既存関数からcallGeminiを呼び出して利用
 // ======================================================
@@ -207,6 +242,9 @@ ${(() => {
   "system_question": null
 }
 `;
+
+    // AIに送信するプロンプトをコンソールに出力
+    console.log("AIに送信するプロンプト:", prompt);
 
     const aiResponseText = await callGemini(prompt);
     let aiOutput = {};
